@@ -1,0 +1,1 @@
+and yeah can you tell me what is the logic of the mocktest section as it has no file to upload like i need to upload a pdf with mcqs which gets setup on the frontend acc to the template we designed for the mocktest

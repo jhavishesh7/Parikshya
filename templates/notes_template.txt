@@ -1,0 +1,33 @@
+PHYSICS NOTES - MECHANICS
+==========================
+
+FORCE AND MOTION
+----------------
+Force is a push or pull that can change the motion of an object. The SI unit of force is the Newton (N).
+
+Newton's Laws of Motion:
+1. First Law (Inertia): An object at rest stays at rest, and an object in motion stays in motion unless acted upon by an external force.
+
+2. Second Law: Force equals mass times acceleration (F = ma)
+
+3. Third Law: For every action, there is an equal and opposite reaction.
+
+WORK AND ENERGY
+---------------
+Work is done when a force moves an object through a distance. Work = Force × Distance
+
+Kinetic Energy: KE = 1/2 mv²
+Potential Energy: PE = mgh
+
+The principle of conservation of energy states that energy cannot be created or destroyed, only transformed from one form to another.
+
+MOMENTUM
+---------
+Momentum is the product of mass and velocity (p = mv). Momentum is conserved in closed systems.
+
+FORMULAS TO REMEMBER:
+- Force: F = ma
+- Work: W = Fd
+- Kinetic Energy: KE = 1/2 mv²
+- Potential Energy: PE = mgh
+- Momentum: p = mv

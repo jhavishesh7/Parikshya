@@ -1,0 +1,44 @@
+MOCK TEST TEMPLATE - Physics
+================================
+
+1. What is the SI unit of force?
+A. Newton
+B. Joule
+C. Watt
+D. Pascal
+Correct Answer: A
+
+2. Which of the following is a vector quantity?
+A. Mass
+B. Temperature
+C. Velocity
+D. Time
+Correct Answer: C
+
+3. What is the formula for kinetic energy?
+A. KE = mgh
+B. KE = 1/2 mv²
+C. KE = mv
+D. KE = Fd
+Correct Answer: B
+
+4. Which law states that every action has an equal and opposite reaction?
+A. Newton's First Law
+B. Newton's Second Law
+C. Newton's Third Law
+D. Newton's Law of Gravitation
+Correct Answer: C
+
+5. What is the unit of electric current?
+A. Volt
+B. Ampere
+C. Ohm
+D. Watt
+Correct Answer: B
+
+NOTES:
+- Each question should start with a number followed by a period
+- Options should be labeled A, B, C, D
+- Include "Correct Answer:" after the options
+- You can add explanations or notes if needed
+- Make sure each question has exactly 4 options
