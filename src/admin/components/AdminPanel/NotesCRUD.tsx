@@ -161,10 +161,24 @@ const NotesCRUD: React.FC = () => {
               font-size: 0.9em;
               margin-left: 10px;
             }
+            .watermark {
+              position: fixed;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%) rotate(-45deg);
+              font-size: 4em;
+              font-weight: bold;
+              color: rgba(0,0,0,0.03);
+              pointer-events: none;
+              z-index: 1000;
+              font-family: 'Arial', sans-serif;
+              text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            }
 
           </style>
         </head>
         <body>
+          <div class="watermark">PARIKSYA</div>
           <button class="download-btn" onclick="downloadNote()">📥 Download Note</button>
           
           <div class="header">

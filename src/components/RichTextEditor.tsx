@@ -50,6 +50,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
     content,
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
+      // Make images resizable after content updates
+      setTimeout(() => makeImagesResizable(), 100);
     },
     editorProps: {
       attributes: {
@@ -61,7 +63,11 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
   const addImage = useCallback(() => {
     const url = window.prompt('Enter image URL:');
     if (url && editor) {
-      editor.chain().focus().setImage({ src: url }).run();
+      editor.chain().focus().setImage({ 
+        src: url,
+        alt: 'Image',
+        title: 'Click and drag to resize'
+      }).run();
     }
   }, [editor]);
 
@@ -86,7 +92,11 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
         try {
           const result = e.target?.result as string;
           if (result) {
-            editor.chain().focus().setImage({ src: result }).run();
+            editor.chain().focus().setImage({ 
+              src: result,
+              alt: file.name,
+              title: 'Click and drag to resize'
+            }).run();
           }
         } catch (error) {
           console.error('Error processing image:', error);
@@ -134,6 +144,45 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
   const setHighlight = useCallback((color: string) => {
     if (editor) {
       editor.chain().focus().setHighlight({ color }).run();
+    }
+  }, [editor]);
+
+  // Make images resizable
+  const makeImagesResizable = useCallback(() => {
+    if (editor) {
+      const images = editor.view.dom.querySelectorAll('img');
+      images.forEach((img: HTMLImageElement) => {
+        // Skip if already processed
+        if (img.hasAttribute('data-resizable')) return;
+        
+        img.style.resize = 'both';
+        img.style.overflow = 'auto';
+        img.style.minWidth = '100px';
+        img.style.minHeight = '100px';
+        img.setAttribute('data-resizable', 'true');
+        
+        // Add resize handles and better UX
+        img.addEventListener('mousedown', (e) => {
+          if (e.target === img) {
+            img.style.cursor = 'nw-resize';
+            img.style.borderColor = 'rgba(59, 130, 246, 0.8)';
+          }
+        });
+        
+        img.addEventListener('mouseup', () => {
+          img.style.cursor = 'pointer';
+          img.style.borderColor = 'rgba(59, 130, 246, 0.2)';
+        });
+        
+        // Add double-click to reset size
+        img.addEventListener('dblclick', () => {
+          img.style.width = 'auto';
+          img.style.height = 'auto';
+        });
+        
+        // Add tooltip
+        img.title = 'Click and drag to resize • Double-click to reset size';
+      });
     }
   }, [editor]);
 
@@ -372,6 +421,13 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
           >
             <LinkIcon className="w-4 h-4" />
           </button>
+          <button
+            onClick={makeImagesResizable}
+            className="p-2 rounded hover:bg-dark-600/50 transition-colors text-gray-300 hover:text-white"
+            title="Make Images Resizable"
+          >
+            <div className="w-4 h-4 border-2 border-current rounded" />
+          </button>
         </div>
 
         {/* Clear Formatting */}
@@ -459,6 +515,23 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
               border-radius: 0.5rem;
               margin: 1rem 0;
               border: 2px solid rgba(59, 130, 246, 0.2);
+              cursor: pointer;
+              transition: all 0.2s ease;
+              position: relative;
+            }
+            .prose-invert img:hover {
+              border-color: rgba(59, 130, 246, 0.6);
+              box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+            }
+            .prose-invert img:focus {
+              outline: 2px solid rgba(59, 130, 246, 0.8);
+              outline-offset: 2px;
+            }
+            .prose-invert img[data-resizable="true"] {
+              resize: both;
+              overflow: auto;
+              min-width: 100px;
+              min-height: 100px;
             }
           `
         }} />
