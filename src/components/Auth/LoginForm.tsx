@@ -1,16 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useNavigate } from 'react-router-dom';
 
-const LoginForm: React.FC = () => {
-  const { signIn, signUp } = useAuthStore();
+const LoginForm: React.FC = React.memo(() => {
+  const { signIn, signUp, loading } = useAuthStore();
   const navigate = useNavigate();
   
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -18,10 +17,9 @@ const LoginForm: React.FC = () => {
     examType: 'IOE' as 'IOE' | 'CEE',
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
+    
     try {
       if (isLogin) {
         const { error } = await signIn(formData.email, formData.password);
@@ -59,39 +57,55 @@ const LoginForm: React.FC = () => {
     } catch (error: any) {
       alert(error.message);
     }
+  }, [isLogin, formData, signIn, signUp, navigate]);
 
-    setLoading(false);
-  };
+  const toggleAuthMode = useCallback(() => {
+    setIsLogin(!isLogin);
+  }, [isLogin]);
+
+  const togglePasswordVisibility = useCallback(() => {
+    setShowPassword(!showPassword);
+  }, [showPassword]);
+
+  const updateFormData = useCallback((field: keyof typeof formData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  }, []);
+
+  const examTypeDescription = useMemo(() => {
+    return formData.examType === 'IOE' 
+      ? 'Physics, Chemistry, Mathematics, English' 
+      : 'Physics, Chemistry, Biology';
+  }, [formData.examType]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4 sm:p-6">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-md"
+        className="w-full max-w-md mx-auto"
       >
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700/50 p-8 shadow-2xl">
+        <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700/50 p-6 sm:p-8 shadow-2xl">
           {/* Header */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6 sm:mb-8">
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2 }}
-              className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4"
+              className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4"
             >
-              <LogIn className="w-8 h-8 text-white" />
+              <LogIn className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
             </motion.div>
             
-            <h1 className="text-2xl font-bold text-white mb-2">
+            <h1 className="text-xl sm:text-2xl font-bold text-white mb-2">
               {isLogin ? 'Welcome Back' : 'Create Account'}
             </h1>
-            <p className="text-gray-400">
-              {isLogin ? 'Sign in to continue your learning journey' : 'Join the NEB exam preparation platform'}
+            <p className="text-sm sm:text-base text-gray-400 px-2">
+              {isLogin ? 'Sign in to continue your learning journey' : 'Join the Parikshya exam preparation platform'}
             </p>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             {!isLogin && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
@@ -106,8 +120,8 @@ const LoginForm: React.FC = () => {
                     type="text"
                     required
                     value={formData.fullName}
-                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    onChange={(e) => updateFormData('fullName', e.target.value)}
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                     placeholder="Enter your full name"
                   />
                 </div>
@@ -118,16 +132,14 @@ const LoginForm: React.FC = () => {
                   </label>
                   <select
                     value={formData.examType}
-                    onChange={(e) => setFormData({ ...formData, examType: e.target.value as 'IOE' | 'CEE' })}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    onChange={(e) => updateFormData('examType', e.target.value)}
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                   >
                     <option value="IOE">IOE (Engineering)</option>
                     <option value="CEE">CEE (Medical)</option>
                   </select>
-                  <p className="text-sm text-gray-400 mt-1">
-                    {formData.examType === 'IOE' 
-                      ? 'Physics, Chemistry, Mathematics, English' 
-                      : 'Physics, Chemistry, Biology'}
+                  <p className="text-xs sm:text-sm text-gray-400 mt-1 px-1">
+                    {examTypeDescription}
                   </p>
                 </div>
               </motion.div>
@@ -138,13 +150,13 @@ const LoginForm: React.FC = () => {
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                 <input
                   type="email"
                   required
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onChange={(e) => updateFormData('email', e.target.value)}
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg pl-10 sm:pl-10 pr-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                   placeholder="Enter your email"
                 />
               </div>
@@ -155,21 +167,21 @@ const LoginForm: React.FC = () => {
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
                   value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg pl-10 pr-12 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onChange={(e) => updateFormData('password', e.target.value)}
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg pl-10 sm:pl-10 pr-12 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                   placeholder="Enter your password"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                  onClick={togglePasswordVisibility}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300 p-1"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
                 </button>
               </div>
             </div>
@@ -179,16 +191,16 @@ const LoginForm: React.FC = () => {
               whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold py-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold py-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-sm sm:text-base"
             >
               {loading ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   <span>Processing...</span>
                 </>
               ) : (
                 <>
-                  {isLogin ? <LogIn className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
+                  {isLogin ? <LogIn className="w-4 h-4 sm:w-5 sm:h-5" /> : <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />}
                   <span>{isLogin ? 'Sign In' : 'Create Account'}</span>
                 </>
               )}
@@ -197,12 +209,12 @@ const LoginForm: React.FC = () => {
 
           {/* Toggle */}
           <div className="mt-6 text-center">
-            <p className="text-gray-400">
+            <p className="text-sm text-gray-400">
               {isLogin ? "Don't have an account?" : 'Already have an account?'}
               <button
                 type="button"
-                onClick={() => setIsLogin(!isLogin)}
-                className="ml-2 text-blue-400 hover:text-blue-300 font-medium"
+                onClick={toggleAuthMode}
+                className="ml-2 text-blue-400 hover:text-blue-300 font-medium transition-colors"
               >
                 {isLogin ? 'Sign Up' : 'Sign In'}
               </button>
@@ -212,6 +224,8 @@ const LoginForm: React.FC = () => {
       </motion.div>
     </div>
   );
-};
+});
+
+LoginForm.displayName = 'LoginForm';
 
 export default LoginForm;

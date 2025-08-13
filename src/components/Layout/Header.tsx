@@ -59,9 +59,9 @@ const Header: React.FC = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-400 via-white to-accent-green-400 bg-clip-text text-transparent">
-                NEB Exam Platform
+                Parikshya
               </h1>
-              <p className="text-sm text-gray-300">AI-Powered Adaptive Testing</p>
+              <p className="text-sm text-gray-300">AI-Powered Adaptive Testing Platform</p>
             </div>
           </motion.div>
 

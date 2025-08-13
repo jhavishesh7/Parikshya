@@ -86,6 +86,9 @@ const ExamPage: React.FC = () => {
               <p className="text-gray-400">
                 AI-powered personalized examination
               </p>
+              <div className="mt-1">
+                <span className="text-blue-400 text-xs font-medium">Powered by Parikshya</span>
+              </div>
             </div>
           </div>
 

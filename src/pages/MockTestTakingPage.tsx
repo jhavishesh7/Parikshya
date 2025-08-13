@@ -144,6 +144,7 @@ const MockTestTakingPage: React.FC = () => {
 		setScore(correctAnswers);
 		setSubmitted(true);
 		setTestStarted(false);
+		// Hide the test interface immediately when submitted
 	};
 
 	const formatTime = (seconds: number) => {
@@ -193,13 +194,16 @@ const MockTestTakingPage: React.FC = () => {
 			<div className="min-h-screen bg-gradient-to-br from-dark-900 via-dark-800 to-dark-900 flex items-center justify-center">
 				<div className="w-full max-w-4xl mx-auto p-6">
 					{/* Header */}
-					<div className="text-center mb-8">
-						<div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 rounded-3xl mb-6 shadow-2xl animate-pulse-glow">
-							<Target className="w-10 h-10 text-white" />
-						</div>
-						<h1 className="text-4xl font-bold text-white mb-3">{mockTest.name}</h1>
-						<p className="text-gray-300 text-xl">{mockTest.description}</p>
-					</div>
+												<div className="text-center mb-8">
+								<div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 rounded-3xl mb-6 shadow-2xl animate-pulse-glow">
+									<Target className="w-10 h-10 text-white" />
+								</div>
+								<h1 className="text-4xl font-bold text-white mb-3">{mockTest.name}</h1>
+								<p className="text-gray-300 text-xl">{mockTest.description}</p>
+								<div className="mt-4">
+									<span className="text-primary-400 text-lg font-medium">Powered by Parikshya</span>
+								</div>
+							</div>
 
 					{/* Test Info */}
 					<div className="bg-dark-800/50 backdrop-blur-sm rounded-2xl p-8 border border-dark-700/50 mb-8">
@@ -275,6 +279,18 @@ const MockTestTakingPage: React.FC = () => {
 				<div className="bg-dark-800/50 backdrop-blur-sm rounded-2xl p-6 border border-dark-700/50 mb-6">
 					<div className="flex flex-col lg:flex-row items-center justify-between space-y-4 lg:space-y-0">
 						<div className="flex items-center space-x-4">
+							{/* Back Button */}
+							<button
+								onClick={() => navigate('/mock-tests')}
+								className="flex items-center space-x-2 px-3 py-2 bg-dark-700/50 hover:bg-dark-600/50 text-white rounded-xl transition-all duration-200 border border-dark-600/50"
+								title="Exit Test"
+							>
+								<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+								</svg>
+								<span className="hidden sm:inline">Exit</span>
+							</button>
+							
 							<div className="w-12 h-12 bg-gradient-to-br from-accent-green-500 to-accent-green-600 rounded-xl flex items-center justify-center">
 								<BookOpen className="w-6 h-6 text-white" />
 							</div>
@@ -321,179 +337,176 @@ const MockTestTakingPage: React.FC = () => {
 					)}
 				</div>
 
-				{/* Main Test Interface */}
-				<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-					{/* Question Navigator */}
-					<div className="lg:col-span-1">
-						<div className="bg-dark-800/50 backdrop-blur-sm rounded-2xl p-6 border border-dark-700/50">
-							<h3 className="text-white font-semibold text-lg mb-4 flex items-center space-x-2">
-								<Eye className="w-5 h-5 text-primary-400" />
-								<span>Question Navigator</span>
-							</h3>
-							{/* Debug Info */}
-							<div className="mb-4 p-2 bg-dark-700/30 rounded text-xs text-gray-400">
-								<div>Current Answers: {JSON.stringify(answers)}</div>
-								<div>Marked for Review: {JSON.stringify(markedForReview)}</div>
-								<div>Saved Questions: {JSON.stringify(savedQuestions)}</div>
-								<div>Questions Count: {questions.length}</div>
-							</div>
-							<div className="grid grid-cols-5 gap-2">
-								{questions.map((question, idx) => {
-									const hasAnswer = answers[question.id] !== undefined;
-									const isMarkedForReview = markedForReview[question.id];
-									const isSaved = savedQuestions[question.id];
-									
-									// Determine button color based on status
-									let buttonColor = 'bg-dark-700/50 text-gray-300 hover:bg-dark-600/50';
-									
-									if (current === idx) {
-										buttonColor = 'bg-primary-600 text-white shadow-lg shadow-primary-600/25';
-									} else if (hasAnswer && isSaved) {
-										buttonColor = 'bg-accent-green-600 text-white'; // Green: Answered and saved
-									} else if (hasAnswer && isMarkedForReview) {
-										buttonColor = 'bg-yellow-600 text-white'; // Yellow: Answered and marked for review
-									} else if (isMarkedForReview && !hasAnswer) {
-										buttonColor = 'bg-red-600 text-white'; // Red: Marked for review without answer
-									} else if (hasAnswer) {
-										buttonColor = 'bg-blue-600 text-white'; // Blue: Answered but not saved
-									}
-									
-									console.log(`Question ${idx + 1} (ID: ${question.id}): hasAnswer=${hasAnswer}, isMarked=${isMarkedForReview}, isSaved=${isSaved}`);
-									
-									return (
-										<button
-											key={idx}
-											onClick={() => setCurrent(idx)}
-											className={`w-10 h-10 rounded-lg text-sm font-medium transition-all duration-200 ${buttonColor}`}
-										>
-											{idx + 1}
-										</button>
-									);
-								})}
-							</div>
-						</div>
-					</div>
-
-					{/* Question Display */}
-					<div className="lg:col-span-2">
-						<div className="bg-dark-800/50 backdrop-blur-sm rounded-2xl p-8 border border-dark-700/50">
-							{/* Question Header */}
-							<div className="flex items-center justify-between mb-6">
-								<span className="text-primary-400 font-medium">Question {current + 1} of {questions.length}</span>
-								{testStarted && (
-									<span className="text-accent-orange-400 font-medium">
-										Time: {formatTime(timeLeft)}
-									</span>
-								)}
-							</div>
-
-							{/* Question Text */}
-							<div className="mb-8">
-								<h3 className="text-white text-xl font-medium leading-relaxed mb-6">
-									{q?.question_text}
+				{/* Main Test Interface - Only show when not submitted */}
+				{!submitted && (
+					<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+						{/* Question Navigator */}
+						<div className="lg:col-span-1">
+							<div className="bg-dark-800/50 backdrop-blur-sm rounded-2xl p-6 border border-dark-700/50">
+								<h3 className="text-white font-semibold text-lg mb-4 flex items-center space-x-2">
+									<Eye className="w-5 h-5 text-primary-400" />
+									<span>Question Navigator</span>
 								</h3>
 
-								{/* Answer Options */}
-								<div className="space-y-3">
-									{q?.options?.map((option: string, idx: number) => (
-										<button
-											key={idx}
-											onClick={() => handleSelect(q.id, idx)}
-											disabled={!testStarted || submitted}
-											className={`w-full p-4 text-left rounded-xl border transition-all duration-200 ${
-												!testStarted || submitted
-													? 'bg-dark-700/30 border-dark-600/30 text-gray-500 cursor-not-allowed'
-													: answers[q.id] === idx
-													? 'bg-primary-600/20 border-primary-500/50 text-white'
-													: 'bg-dark-700/30 border-dark-600/30 text-gray-300 hover:bg-dark-600/50 hover:border-primary-500/30'
-											}`}
-										>
-											<div className="flex items-center space-x-3">
-												<div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-													answers[q.id] === idx
-														? 'border-primary-500 bg-primary-500'
-														: 'border-dark-500'
-												}`}>
-													{answers[q.id] === idx && (
-														<div className="w-2 h-2 bg-white rounded-full"></div>
-													)}
-												</div>
-												<span className="font-medium">{option}</span>
-											</div>
-										</button>
-									))}
+								<div className="grid grid-cols-5 gap-2">
+									{questions.map((question, idx) => {
+										const hasAnswer = answers[question.id] !== undefined;
+										const isMarkedForReview = markedForReview[question.id] === true;
+										const isSaved = savedQuestions[question.id] === true;
+										
+										// Determine button color based on status
+										let buttonColor = 'bg-dark-700/50 text-gray-300 hover:bg-dark-600/50';
+										
+										if (current === idx) {
+											buttonColor = 'bg-primary-600 text-white shadow-lg shadow-primary-600/25';
+										} else if (hasAnswer && isSaved) {
+											buttonColor = 'bg-accent-green-600 text-white'; // Green: Answered and saved
+										} else if (hasAnswer && isMarkedForReview) {
+											buttonColor = 'bg-yellow-600 text-white'; // Yellow: Answered and marked for review
+										} else if (isMarkedForReview && !hasAnswer) {
+											buttonColor = 'bg-red-600 text-white'; // Red: Marked for review without answer
+										} else if (hasAnswer) {
+											buttonColor = 'bg-blue-600 text-white'; // Blue: Answered but not saved
+										}
+										
+										console.log(`Question ${idx + 1} (ID: ${question.id}): hasAnswer=${hasAnswer}, isMarked=${isMarkedForReview}, isSaved=${isSaved}`);
+										
+										return (
+											<button
+												key={idx}
+												onClick={() => setCurrent(idx)}
+												className={`w-10 h-10 rounded-lg text-sm font-medium transition-all duration-200 ${buttonColor}`}
+											>
+												{idx + 1}
+											</button>
+										);
+									})}
 								</div>
 							</div>
+						</div>
 
-							{/* Navigation */}
-							<div className="flex items-center justify-between pt-6 border-t border-dark-700/50">
-								<button
-									onClick={() => setCurrent(Math.max(0, current - 1))}
-									disabled={current === 0}
-									className="px-6 py-3 bg-dark-700/50 hover:bg-dark-600/50 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition-all duration-200 flex items-center space-x-2"
-								>
-									<span>← Previous</span>
-								</button>
+						{/* Question Display */}
+						<div className="lg:col-span-2">
+							<div className="bg-dark-800/50 backdrop-blur-sm rounded-2xl p-8 border border-dark-700/50">
+								{/* Question Header */}
+								<div className="flex items-center justify-between mb-6">
+									<span className="text-primary-400 font-medium">Question {current + 1} of {questions.length}</span>
+									{testStarted && (
+										<span className="text-accent-orange-400 font-medium">
+											Time: {formatTime(timeLeft)}
+										</span>
+									)}
+								</div>
 
-								<div className="flex items-center space-x-3">
-									{/* Mark for Review Button - Always visible */}
+								{/* Question Text */}
+								<div className="mb-8">
+									<h3 className="text-white text-xl font-medium leading-relaxed mb-6">
+										{q?.question_text}
+									</h3>
+
+									{/* Answer Options */}
+									<div className="space-y-3">
+										{q?.options?.map((option: string, idx: number) => (
+											<button
+												key={idx}
+												onClick={() => handleSelect(q.id, idx)}
+												disabled={!testStarted || submitted}
+												className={`w-full p-4 text-left rounded-xl border transition-all duration-200 ${
+													!testStarted || submitted
+														? 'bg-dark-700/30 border-dark-600/30 text-gray-500 cursor-not-allowed'
+														: answers[q.id] === idx
+														? 'bg-primary-600/20 border-primary-500/50 text-white'
+														: 'bg-dark-700/30 border-dark-600/30 text-gray-300 hover:bg-dark-600/50 hover:border-primary-500/30'
+												}`}
+											>
+												<div className="flex items-center space-x-3">
+													<div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+														answers[q.id] === idx
+															? 'border-primary-500 bg-primary-500'
+															: 'border-dark-500'
+													}`}>
+														{answers[q.id] === idx && (
+															<div className="w-2 h-2 bg-white rounded-full"></div>
+														)}
+													</div>
+													<span className="font-medium">{option}</span>
+												</div>
+											</button>
+										))}
+									</div>
+								</div>
+
+								{/* Navigation */}
+								<div className="flex items-center justify-between pt-6 border-t border-dark-700/50">
 									<button
-										onClick={handleMarkForReview}
-										className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center space-x-2 ${
-											markedForReview[q.id]
-												? 'bg-yellow-600 hover:bg-yellow-700 text-white'
-												: 'bg-orange-600 hover:bg-orange-700 text-white'
-										}`}
+										onClick={() => setCurrent(Math.max(0, current - 1))}
+										disabled={current === 0}
+										className="px-6 py-3 bg-dark-700/50 hover:bg-dark-600/50 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition-all duration-200 flex items-center space-x-2"
 									>
-										{markedForReview[q.id] ? (
-											<>
-												<CheckCircle className="w-4 h-4" />
-												<span>Marked for Review</span>
-											</>
-										) : (
-											<>
-												<BookOpen className="w-4 h-4" />
-												<span>Mark for Review</span>
-											</>
-										)}
+										<span>← Previous</span>
 									</button>
 
-									{/* Save and Continue Button - Only visible when question is answered */}
-									{answers[q.id] !== undefined && (
+									<div className="flex items-center space-x-3">
+										{/* Mark for Review Button - Always visible */}
 										<button
-											onClick={handleSaveAndContinue}
-											className="px-6 py-3 bg-accent-green-600 hover:bg-accent-green-700 text-white rounded-xl font-semibold transition-all duration-200 flex items-center space-x-2"
+											onClick={handleMarkForReview}
+											className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center space-x-2 ${
+												markedForReview[q.id]
+													? 'bg-yellow-600 hover:bg-yellow-700 text-white'
+													: 'bg-orange-600 hover:bg-orange-700 text-white'
+											}`}
 										>
-											<CheckCircle className="w-4 h-4" />
-											<span>Save & Continue</span>
+											{markedForReview[q.id] ? (
+												<>
+													<CheckCircle className="w-4 h-4" />
+													<span>Marked for Review</span>
+												</>
+											) : (
+												<>
+													<BookOpen className="w-4 h-4" />
+													<span>Mark for Review</span>
+												</>
+											)}
 										</button>
-									)}
 
-									{/* Next Button - Only visible when question is not answered */}
-									{answers[q.id] === undefined && current < questions.length - 1 && (
-										<button
-											onClick={() => setCurrent(current + 1)}
-											className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl transition-all duration-200 flex items-center space-x-2"
-										>
-											<span>Next →</span>
-										</button>
-									)}
+										{/* Save and Continue Button - Only visible when question is answered and NOT the last question */}
+										{answers[q.id] !== undefined && current < questions.length - 1 && (
+											<button
+												onClick={handleSaveAndContinue}
+												className="px-6 py-3 bg-accent-green-600 hover:bg-accent-green-700 text-white rounded-xl font-semibold transition-all duration-200 flex items-center space-x-2"
+											>
+												<CheckCircle className="w-4 h-4" />
+												<span>Save & Continue</span>
+											</button>
+										)}
 
-									{/* Submit Button - Only on last question */}
-									{current === questions.length - 1 && (
-										<button
-											className="px-6 py-3 bg-accent-green-600 hover:bg-accent-green-700 text-white rounded-xl transition-all duration-200"
-											onClick={handleSubmit}
-											disabled={submitted || !testStarted}
-										>
-											Submit Test
-										</button>
-									)}
+										{/* Submit Button - Only on last question when answered */}
+										{current === questions.length - 1 && answers[q.id] !== undefined && (
+											<button
+												className="px-6 py-3 bg-accent-green-600 hover:bg-accent-green-700 text-white rounded-xl font-semibold transition-all duration-200 flex items-center space-x-2"
+												onClick={handleSubmit}
+												disabled={submitted || !testStarted}
+											>
+												<Target className="w-4 h-4" />
+												<span>Submit Test</span>
+											</button>
+										)}
+
+										{/* Next Button - Only visible when question is not answered */}
+										{answers[q.id] === undefined && current < questions.length - 1 && (
+											<button
+												onClick={() => setCurrent(current + 1)}
+												className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl transition-all duration-200 flex items-center space-x-2"
+											>
+												<span>Next →</span>
+											</button>
+										)}
+									</div>
 								</div>
 							</div>
 						</div>
 					</div>
-				</div>
+				)}
 
 				{/* Results */}
 				{submitted && (
@@ -550,9 +563,41 @@ const MockTestTakingPage: React.FC = () => {
 								<div className="space-y-2">
 									{questions.map((ques, idx) => (
 										answers[ques.id] !== ques.correct_answer && answers[ques.id] !== undefined && (
-											<div key={ques.id} className="flex items-center gap-2 text-red-300">
-												<XCircle className="w-4 h-4" />
-												<span>Q{idx + 1}</span>
+											<div 
+												key={ques.id} 
+												className="group relative cursor-pointer"
+												title="Hover to see question details"
+											>
+												<div className="flex items-center gap-2 text-red-300 hover:text-red-200 transition-colors">
+													<XCircle className="w-4 h-4" />
+													<span>Q{idx + 1}</span>
+												</div>
+												
+												{/* Hover Tooltip with Question Details */}
+												<div className="absolute bottom-full left-0 mb-2 w-96 bg-dark-900 border border-red-500/50 rounded-lg p-4 shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+													<div className="text-sm space-y-3">
+														<div>
+															<span className="text-red-400 font-semibold">Question:</span>
+															<p className="text-gray-300 mt-1">{ques.question_text}</p>
+														</div>
+														<div>
+															<span className="text-red-400 font-semibold">Your Answer:</span>
+															<p className="text-gray-300 mt-1">{ques.options[answers[ques.id]]}</p>
+														</div>
+														<div>
+															<span className="text-accent-green-400 font-semibold">Correct Answer:</span>
+															<p className="text-gray-300 mt-1">{ques.options[ques.correct_answer]}</p>
+														</div>
+														{ques.explanation && (
+															<div>
+																<span className="text-blue-400 font-semibold">Explanation:</span>
+																<p className="text-gray-300 mt-1">{ques.explanation}</p>
+															</div>
+														)}
+													</div>
+													{/* Arrow pointing down */}
+													<div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-dark-900"></div>
+												</div>
 											</div>
 										)
 									))}

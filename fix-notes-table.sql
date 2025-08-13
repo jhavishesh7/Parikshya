@@ -41,11 +41,7 @@ BEGIN
         ALTER TABLE notes ADD COLUMN exam_type text DEFAULT 'IOE';
     END IF;
     
-    -- Add difficulty_level column if it doesn't exist
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                   WHERE table_name = 'notes' AND column_name = 'difficulty_level') THEN
-        ALTER TABLE notes ADD COLUMN difficulty_level text DEFAULT 'moderate';
-    END IF;
+
     
     -- Add file_size column if it doesn't exist
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns 

@@ -5,13 +5,14 @@ import { supabase } from '../lib/supabase';
 import { BookOpen, Eye, FileText, Plus, Search, Brain, Target, Award } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+
+
 interface Note {
   id: string;
   title: string;
   content: string;
   subject_id: string;
   exam_type: string;
-  difficulty_level: string;
   subjects?: {
     display_name: string;
   };
@@ -120,6 +121,28 @@ const NotesPage: React.FC = () => {
               white-space: pre-wrap;
               word-wrap: break-word;
             }
+            .content img {
+              max-width: 100%;
+              height: auto;
+              border-radius: 8px;
+              margin: 10px 0;
+            }
+            .content h1, .content h2, .content h3, .content h4, .content h5, .content h6 {
+              margin: 20px 0 10px 0;
+              color: #333;
+            }
+            .content p {
+              margin: 10px 0;
+            }
+            .content strong, .content b {
+              font-weight: bold;
+            }
+            .content em, .content i {
+              font-style: italic;
+            }
+            .content u {
+              text-decoration: underline;
+            }
             .download-btn {
               position: fixed;
               top: 20px;
@@ -167,11 +190,11 @@ const NotesPage: React.FC = () => {
             <div class="meta">
               <strong>Exam Type:</strong> ${note.exam_type || 'IOE'}
               <span class="subject-tag">${note.subjects?.display_name || note.subject_id || 'No Subject'}</span>
-              <span class="difficulty-tag difficulty-${note.difficulty_level || 'moderate'}">${note.difficulty_level || 'moderate'}</span>
+
             </div>
           </div>
           
-          <div class="content">${note.content || 'No content available'}</div>
+          <div class="content" id="note-content">${note.content || 'No content available'}</div>
           
           <script>
             function downloadNote() {
@@ -179,7 +202,6 @@ const NotesPage: React.FC = () => {
 
 Exam Type: ${note.exam_type || 'IOE'}
 Subject: ${note.subjects?.display_name || note.subject_id || 'No Subject'}
-Difficulty: ${note.difficulty_level || 'moderate'}
 
 ${note.content || 'No content available'}\`;
               
@@ -202,8 +224,7 @@ ${note.content || 'No content available'}\`;
   };
 
   const filteredNotesBySubject = notes.filter(note => {
-    const matchesSearch = note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         note.content?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = note.title.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesSubject = !selectedSubject || note.subject_id === selectedSubject;
     
@@ -243,6 +264,23 @@ ${note.content || 'No content available'}\`;
   return (
     <div className="min-h-screen bg-gradient-to-br from-dark-900 via-dark-800 to-dark-900">
       <div className="max-w-7xl mx-auto p-6">
+        {/* Back Button */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="mb-6"
+        >
+          <button
+            onClick={() => window.history.back()}
+            className="flex items-center space-x-2 px-4 py-2 bg-dark-700/50 hover:bg-dark-600/50 text-white rounded-xl transition-all duration-200 border border-dark-600/50"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span>Back</span>
+          </button>
+        </motion.div>
+
         {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -257,6 +295,9 @@ ${note.content || 'No content available'}\`;
             Access comprehensive study materials, PDFs, and resources organized by subject and exam type. 
             <span className="text-accent-green-400 font-medium"> Enhance your preparation with our curated collection.</span>
           </p>
+          <div className="mt-6">
+            <span className="text-primary-400 text-lg font-medium">Powered by Parikshya</span>
+          </div>
         </motion.div>
 
         {/* Search and Filter Section */}
@@ -272,7 +313,7 @@ ${note.content || 'No content available'}\`;
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search notes by title, topic, or description..."
+                placeholder="Search notes by title..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-12 pr-4 py-4 bg-dark-800/50 border border-dark-600/50 rounded-2xl text-white placeholder-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all duration-200 backdrop-blur-sm"
@@ -372,21 +413,9 @@ ${note.content || 'No content available'}\`;
                   <span className="text-xs text-gray-400">{note.exam_type}</span>
                 </div>
 
-                {/* Note Content */}
+                {/* Note Title */}
                 <div className="mb-4">
                   <h3 className="text-white font-semibold text-lg mb-2 line-clamp-2">{note.title}</h3>
-                  {note.content && (
-                    <p className="text-gray-400 text-sm line-clamp-3 mb-3">{note.content}</p>
-                  )}
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      note.difficulty_level === 'easy' ? 'bg-green-500/20 text-green-300' :
-                      note.difficulty_level === 'moderate' ? 'bg-yellow-500/20 text-yellow-300' :
-                      'bg-red-500/20 text-red-300'
-                    }`}>
-                      {note.difficulty_level}
-                    </span>
-                </div>
                 </div>
 
                 {/* Action Buttons */}

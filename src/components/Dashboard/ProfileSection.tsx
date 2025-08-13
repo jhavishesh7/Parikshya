@@ -75,9 +75,9 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ userProfile, testSessio
 
   // Example customer care info
   const customerCare = {
-    email: 'support@examplatform.com',
-    phone: '+1-800-123-4567',
-    hours: 'Mon-Fri 9am-6pm',
+    email: 'parikshya.blackbytes@gmail.com',
+    phone: '+977-9820987206',
+    
   };
 
   return (
@@ -289,7 +289,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ userProfile, testSessio
         <div className="space-y-2 text-sm">
           <p className="text-gray-400">Email: <span className="text-white">{customerCare.email}</span></p>
           <p className="text-gray-400">Phone: <span className="text-white">{customerCare.phone}</span></p>
-          <p className="text-gray-400">Hours: <span className="text-white">{customerCare.hours}</span></p>
+         
         </div>
       </motion.div>
     </div>

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { useAuthStore } from '../../../store/authStore';
+import RichTextEditor from '../../../components/RichTextEditor';
 
 type Subject = {
   id: string;
@@ -12,7 +13,7 @@ type Subject = {
 };
 
 const NotesCRUD: React.FC = () => {
-  const { profile } = useAuthStore();
+  const { profile: _profile } = useAuthStore();
   const [notes, setNotes] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,8 +23,7 @@ const NotesCRUD: React.FC = () => {
     title: '',
     content: '',
     subject_id: '',
-    exam_type: 'IOE' as 'IOE' | 'CEE',
-    difficulty_level: 'moderate' as 'easy' | 'moderate' | 'difficult'
+    exam_type: 'IOE' as 'IOE' | 'CEE'
   });
 
   useEffect(() => {
@@ -161,17 +161,7 @@ const NotesCRUD: React.FC = () => {
               font-size: 0.9em;
               margin-left: 10px;
             }
-            .difficulty-tag {
-              display: inline-block;
-              padding: 4px 12px;
-              border-radius: 20px;
-              font-size: 0.9em;
-              margin-left: 10px;
-              font-weight: bold;
-            }
-            .difficulty-easy { background-color: #d4edda; color: #155724; }
-            .difficulty-moderate { background-color: #fff3cd; color: #856404; }
-            .difficulty-difficult { background-color: #f8d7da; color: #721c24; }
+
           </style>
         </head>
         <body>
@@ -182,7 +172,6 @@ const NotesCRUD: React.FC = () => {
             <div class="meta">
               <strong>Exam Type:</strong> ${note.exam_type || 'IOE'}
               <span class="subject-tag">${note.subjects?.display_name || note.subject_id || 'No Subject'}</span>
-              <span class="difficulty-tag difficulty-${note.difficulty_level || 'moderate'}">${note.difficulty_level || 'moderate'}</span>
             </div>
           </div>
           
@@ -194,7 +183,6 @@ const NotesCRUD: React.FC = () => {
 
 Exam Type: ${note.exam_type || 'IOE'}
 Subject: ${note.subjects?.display_name || note.subject_id || 'No Subject'}
-Difficulty: ${note.difficulty_level || 'moderate'}
 
 ${note.content || 'No content available'}\`;
               
@@ -222,7 +210,7 @@ ${note.content || 'No content available'}\`;
       content: note.content || '',
       subject_id: note.subject_id || '',
       exam_type: note.exam_type || 'IOE',
-      difficulty_level: note.difficulty_level || 'moderate'
+      
     });
     setEditingId(note.id);
   }
@@ -243,7 +231,7 @@ ${note.content || 'No content available'}\`;
          content: form.content.trim(),
          subject_id: form.subject_id || null,
          exam_type: form.exam_type,
-         difficulty_level: form.difficulty_level
+         
        };
 
       if (editingId) {
@@ -268,7 +256,7 @@ ${note.content || 'No content available'}\`;
         content: '',
         subject_id: '',
         exam_type: 'IOE',
-        difficulty_level: 'moderate'
+
       });
       fetchNotes();
       
@@ -348,31 +336,17 @@ ${note.content || 'No content available'}\`;
                </select>
              </div>
              
-             <div>
-               <label className="block text-sm font-medium text-gray-300 mb-1">Difficulty Level</label>
-               <select
-                 value={form.difficulty_level}
-                 onChange={(e) => setForm({ ...form, difficulty_level: e.target.value as any })}
-                 className="w-full p-3 bg-dark-600/50 border border-dark-500/50 rounded-lg text-white focus:ring-2 focus:ring-accent-green-500 focus:border-transparent"
-               >
-                 <option value="easy">Easy</option>
-                 <option value="moderate">Moderate</option>
-                 <option value="difficult">Difficult</option>
-               </select>
-             </div>
+
            </div>
            
-           <div>
-             <label className="block text-sm font-medium text-gray-300 mb-1">Content *</label>
-             <textarea
-               value={form.content}
-               onChange={(e) => setForm({ ...form, content: e.target.value })}
-               rows={6}
-               className="w-full p-3 bg-dark-600/50 border border-dark-500/50 rounded-lg text-white focus:ring-2 focus:ring-accent-green-500 focus:border-transparent"
-               placeholder="Enter your note content here..."
-               required
-             />
-           </div>
+                       <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Content *</label>
+              <RichTextEditor
+                content={form.content}
+                onChange={(content) => setForm({ ...form, content })}
+                placeholder="Enter your note content here..."
+              />
+            </div>
           
           <div className="flex gap-3">
             <button
@@ -393,7 +367,7 @@ ${note.content || 'No content available'}\`;
                      content: '',
                      subject_id: '',
                      exam_type: 'IOE',
-                     difficulty_level: 'moderate'
+
                    });
                  }}
                  className="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
@@ -424,8 +398,6 @@ ${note.content || 'No content available'}\`;
                <tr>
                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Title</th>
                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Subject</th>
-                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Content</th>
-                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Difficulty</th>
                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Exam Type</th>
                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
                </tr>
@@ -443,20 +415,8 @@ ${note.content || 'No content available'}\`;
                          {note.subjects?.display_name || note.subject_id || 'N/A'}
                        </span>
                      </td>
-                     <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                       <div className="text-gray-300 text-xs truncate max-w-xs">
-                         {note.content || '-'}
-                       </div>
-                     </td>
-                     <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                         note.difficulty_level === 'easy' ? 'bg-green-500/20 text-green-300' :
-                         note.difficulty_level === 'moderate' ? 'bg-yellow-500/20 text-yellow-300' :
-                         'bg-red-500/20 text-red-300'
-                       }`}>
-                         {note.difficulty_level}
-                       </span>
-                     </td>
+
+
                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                        <span className="px-2 py-1 bg-green-500/20 text-green-300 rounded-full text-xs font-medium">
                          {note.exam_type || 'IOE'}

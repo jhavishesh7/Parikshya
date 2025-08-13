@@ -63,7 +63,7 @@ question,option_a,option_b,option_c,option_d,correct_answer,difficulty,topic,exp
 - **Title**: The name of your note
 - **Subject**: Choose from available subjects (optional)
 - **Exam Type**: IOE or CEE
-- **Difficulty Level**: Easy, Moderate, or Difficult
+
 - **Content**: Your actual note content (text only)
 
 ## 🧪 **Mock Test Creation Process:**

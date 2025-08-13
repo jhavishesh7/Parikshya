@@ -18,28 +18,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   loading: true,
 
   signIn: async (email: string, password: string) => {
+    set({ loading: true });
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
     if (data.user) {
-      set({ user: data.user });
-      await get().fetchProfile();
+      set({ user: data.user, loading: false });
+      // Fetch profile in background to avoid blocking UI
+      get().fetchProfile();
+    } else {
+      set({ loading: false });
     }
     return { data, error };
   },
 
   signUp: async (email: string, password: string, fullName: string, examType: 'IOE' | 'CEE') => {
+    set({ loading: true });
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
     });
 
-  // Always try to create a profile row if user exists in session
-  let userId = data.user?.id;
-  // session variable is not used
-  if (!userId && data.session?.user) userId = data.session.user.id;
-  if (userId) {
+    // Always try to create a profile row if user exists in session
+    let userId = data.user?.id;
+    if (!userId && data.session?.user) userId = data.session.user.id;
+    if (userId) {
       // Always set role to 'student' on signup
       const { error: profileError } = await supabase
         .from('profiles')
@@ -57,26 +61,38 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
     }
 
+    set({ loading: false });
     return { data, error };
   },
 
   signOut: async () => {
+    set({ loading: true });
     await supabase.auth.signOut();
-    set({ user: null, profile: null });
+    set({ user: null, profile: null, loading: false });
   },
 
   fetchProfile: async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
+    const { user } = get();
+    if (!user) {
+      set({ loading: false });
+      return;
+    }
+
+    try {
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', user.id)
         .single();
-      console.log('Fetched profile:', profile, 'Error:', error, 'User:', user);
-      set({ user, profile, loading: false });
-    } else {
-      set({ user: null, profile: null, loading: false });
+      
+      if (!error && profile) {
+        set({ profile, loading: false });
+      } else {
+        set({ loading: false });
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      set({ loading: false });
     }
   },
 
@@ -97,14 +113,39 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 }));
 
+// Initialize auth state with better error handling
+let authInitialized = false;
+
+const initializeAuth = async () => {
+  if (authInitialized) return;
+  
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      useAuthStore.setState({ user, loading: false });
+      // Fetch profile in background
+      setTimeout(() => useAuthStore.getState().fetchProfile(), 100);
+    } else {
+      useAuthStore.setState({ user: null, profile: null, loading: false });
+    }
+  } catch (error) {
+    console.error('Auth initialization error:', error);
+    useAuthStore.setState({ user: null, profile: null, loading: false });
+  } finally {
+    authInitialized = true;
+  }
+};
+
 // Initialize auth state
-supabase.auth.onAuthStateChange((event) => {
-  if (event === 'SIGNED_IN') {
-    useAuthStore.getState().fetchProfile();
+initializeAuth();
+
+// Optimized auth state change handler
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_IN' && session?.user) {
+    useAuthStore.setState({ user: session.user, loading: false });
+    // Fetch profile in background
+    setTimeout(() => useAuthStore.getState().fetchProfile(), 100);
   } else if (event === 'SIGNED_OUT') {
     useAuthStore.setState({ user: null, profile: null, loading: false });
   }
 });
-
-// Fetch initial auth state
-useAuthStore.getState().fetchProfile();

@@ -153,6 +153,9 @@ const AdminPanel: React.FC = () => {
                 <div>
                   <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
                   <p className="text-gray-300 text-lg">Welcome, {profile?.full_name}! Manage the platform and monitor performance.</p>
+                  <div className="mt-2">
+                    <span className="text-primary-400 text-sm font-medium">Powered by Parikshya</span>
+                  </div>
                 </div>
               </div>
             </motion.div>

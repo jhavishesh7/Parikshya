@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { useAuthStore } from '../../../store/authStore';
+import RichTextEditor from '../../../components/RichTextEditor';
 import Papa from 'papaparse';
 
 const FileUploadForm: React.FC = () => {
@@ -36,8 +37,7 @@ const FileUploadForm: React.FC = () => {
   const [noteForm, setNoteForm] = useState({
     title: '',
     content: '',
-    exam_type: 'IOE' as 'IOE' | 'CEE',
-    difficulty_level: 'moderate' as 'easy' | 'moderate' | 'difficult'
+    exam_type: 'IOE' as 'IOE' | 'CEE'
   });
 
   // Mock test form state
@@ -241,7 +241,7 @@ const FileUploadForm: React.FC = () => {
           title: noteForm.title.trim(),
           subject_id: selectedSubject || null,
           exam_type: noteForm.exam_type,
-          difficulty_level: noteForm.difficulty_level,
+
           content: noteForm.content.trim(),
           file_path: null, // Set to null for direct text input
           file_size: noteForm.content.length,
@@ -264,8 +264,7 @@ const FileUploadForm: React.FC = () => {
       setNoteForm({
         title: '',
         content: '',
-        exam_type: 'IOE',
-        difficulty_level: 'moderate'
+        exam_type: 'IOE'
       });
       
       // Clear subject selection
@@ -861,33 +860,17 @@ NOTES:
                 </select>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Difficulty Level
-                </label>
-                <select
-                  value={noteForm.difficulty_level}
-                  onChange={(e) => setNoteForm({ ...noteForm, difficulty_level: e.target.value as 'easy' | 'moderate' | 'difficult' })}
-                  className="w-full p-3 bg-dark-700/50 border border-dark-600/50 rounded-lg text-white focus:ring-2 focus:ring-accent-green-500 focus:border-transparent"
-                >
-                  <option value="easy">Easy</option>
-                  <option value="moderate">Moderate</option>
-                  <option value="difficult">Difficult</option>
-                </select>
-              </div>
+
             </div>
             
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Content *
               </label>
-              <textarea
-                value={noteForm.content}
-                onChange={(e) => setNoteForm({ ...noteForm, content: e.target.value })}
-                className="w-full p-3 bg-dark-700/50 border border-dark-600/50 rounded-lg text-white focus:ring-2 focus:ring-accent-green-500 focus:border-transparent"
+              <RichTextEditor
+                content={noteForm.content}
+                onChange={(content) => setNoteForm({ ...noteForm, content })}
                 placeholder="Enter your note content here..."
-                rows={6}
-                required
               />
             </div>
             

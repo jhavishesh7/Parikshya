@@ -206,7 +206,6 @@ VITE_SUPABASE_ANON_KEY=${supabaseKey}
             content TEXT,
             subject_id UUID REFERENCES subjects(id) ON DELETE CASCADE,
             exam_type TEXT DEFAULT 'IOE',
-            difficulty_level TEXT DEFAULT 'moderate',
             file_size INTEGER DEFAULT 0,
             uploaded_by UUID REFERENCES profiles(id) ON DELETE CASCADE,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

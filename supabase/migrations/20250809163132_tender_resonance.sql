@@ -122,7 +122,7 @@ CREATE TABLE IF NOT EXISTS notes (
   description text,
   subject_id uuid REFERENCES subjects(id),
   exam_type exam_type NOT NULL,
-  difficulty_level difficulty_level,
+
   topic text,
   file_path text NOT NULL,
   file_size bigint,

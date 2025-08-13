@@ -80,7 +80,6 @@ export type Note = {
   description?: string;
   subject_id: string;
   exam_type: 'IOE' | 'CEE';
-  difficulty_level?: 'easy' | 'moderate' | 'difficult';
   topic?: string;
   file_path: string;
   file_size?: number;
