@@ -5,8 +5,9 @@ import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
 import Header from '../components/Layout/Header';
 import DashboardStats from '../components/Dashboard/DashboardStats';
-import PerformanceChart from '../components/Dashboard/PerformanceChart';
+import StudyPlanner from '../components/Dashboard/StudyPlanner';
 import ProfileSection from '../components/Dashboard/ProfileSection';
+import MockTestResults from '../components/Dashboard/MockTestResults';
 import { 
   BookOpen, 
   Clock, 
@@ -50,12 +51,23 @@ const Dashboard: React.FC = React.memo(() => {
   const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState<Profile | null>(null);
   const [testSessions, setTestSessions] = useState<TestSession[]>([]);
+  const [mockTestResults, setMockTestResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Additional real-time data for dashboard tabs
+  const [dashboardStats, setDashboardStats] = useState({
+    totalMockTests: 0,
+    totalNotes: 0,
+    totalQuestions: 0,
+    recentActivity: 0
+  });
+  const [statsLoading, setStatsLoading] = useState(false);
 
   const fetchUserProfile = useCallback(async () => {
     if (!user) return;
     
     try {
+      console.log('🔄 Fetching fresh user profile data...');
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -63,7 +75,15 @@ const Dashboard: React.FC = React.memo(() => {
         .single();
       
       if (error) throw error;
+      console.log('✅ Profile data updated:', data);
       setUserProfile(data);
+      
+      // Also update the auth store profile to keep it in sync
+      // This ensures DashboardStats and other components get fresh data
+      if (data) {
+        // Note: In a real app, you'd want to update the store properly
+        // For now, we'll rely on the userProfile state
+      }
     } catch (error) {
       console.error('Error fetching profile:', error);
     } finally {
@@ -89,47 +109,164 @@ const Dashboard: React.FC = React.memo(() => {
     }
   }, [user]);
 
+  const fetchMockTestResults = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      // Try to fetch mock test results (table might not exist yet)
+      const { data, error } = await supabase
+        .from('mock_test_results')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('completed_at', { ascending: false })
+        .limit(10);
+      
+      if (error) {
+        console.log('Mock test results table not available yet:', error);
+        setMockTestResults([]);
+      } else {
+        setMockTestResults(data || []);
+        console.log('✅ Mock test results fetched:', data);
+      }
+    } catch (error) {
+      console.log('Mock test results table not available yet:', error);
+      setMockTestResults([]);
+    }
+  }, [user]);
+
+  const fetchDashboardStats = useCallback(async () => {
+    try {
+      setStatsLoading(true);
+      console.log('🔄 Fetching dashboard statistics...');
+      
+      // Fetch total mock tests
+      const { count: mockTestsCount, error: mockTestsError } = await supabase
+        .from('mock_tests')
+        .select('*', { count: 'exact', head: true });
+      
+      if (mockTestsError) {
+        console.error('Error fetching mock tests count:', mockTestsError);
+      }
+      
+      // Fetch total notes
+      const { count: notesCount, error: notesError } = await supabase
+        .from('notes')
+        .select('*', { count: 'exact', head: true });
+      
+      if (notesError) {
+        console.error('Error fetching notes count:', notesError);
+      }
+      
+      // Fetch total questions
+      const { count: questionsCount, error: questionsError } = await supabase
+        .from('questions')
+        .select('*', { count: 'exact', head: true });
+      
+      if (questionsError) {
+        console.error('Error fetching questions count:', questionsError);
+      }
+      
+      // Fetch recent activity (last 7 days)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
+      const { count: recentActivityCount, error: activityError } = await supabase
+        .from('test_sessions')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', sevenDaysAgo.toISOString());
+      
+      if (activityError) {
+        console.error('Error fetching recent activity count:', activityError);
+      }
+      
+      const stats = {
+        totalMockTests: mockTestsCount || 0,
+        totalQuestions: questionsCount || 0,
+        totalNotes: notesCount || 0,
+        recentActivity: recentActivityCount || 0
+      };
+      
+      console.log('✅ Dashboard stats updated:', stats);
+      setDashboardStats(stats);
+      
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+    } finally {
+      setStatsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchUserProfile();
     fetchTestSessions();
-  }, [fetchUserProfile, fetchTestSessions]);
+    fetchMockTestResults();
+    fetchDashboardStats();
+    
+    // Set up real-time updates every 30 seconds
+    const interval = setInterval(() => {
+      console.log('🔄 Auto-refreshing dashboard data...');
+      fetchDashboardStats();
+      fetchMockTestResults(); // Also refresh mock test results
+    }, 30000); // 30 seconds
+    
+    return () => clearInterval(interval);
+  }, [fetchUserProfile, fetchTestSessions, fetchMockTestResults, fetchDashboardStats]);
 
   const quickActions = useMemo(() => [
     {
       title: 'Adaptive Test',
-      description: 'AI-powered personalized testing',
+      description: `AI-powered personalized testing • ${dashboardStats.recentActivity} recent sessions`,
       icon: Brain,
       color: 'from-primary-500 to-primary-600',
       action: () => navigate('/exam'),
     },
     {
       title: 'Mock Tests',
-      description: 'Practice with timed exams',
+      description: `${dashboardStats.totalMockTests} available tests • Practice with timed exams`,
       icon: Clock,
       color: 'from-accent-orange-500 to-accent-orange-600',
       action: () => navigate('/mock-tests'),
     },
     {
       title: 'Study Notes',
-      description: 'Access comprehensive materials',
+      description: `${dashboardStats.totalNotes} materials available • Access comprehensive content`,
       icon: BookOpen,
       color: 'from-accent-green-500 to-accent-green-600',
       action: () => navigate('/notes'),
     },
     {
       title: 'Performance',
-      description: 'Track your progress',
+      description: `${dashboardStats.totalQuestions} questions in database • Track your progress`,
       icon: TrendingUp,
       color: 'from-primary-600 to-primary-700',
       action: () => navigate('/dashboard'),
     },
-  ], [navigate]);
+  ], [navigate, dashboardStats]);
 
   if (profile?.role === 'admin') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-dark-900 via-dark-800 to-dark-900">
         <Header />
         <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          {/* Refresh Button */}
+          <div className="flex justify-end mb-4">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              disabled={statsLoading}
+              onClick={() => {
+                fetchUserProfile();
+                fetchTestSessions();
+                fetchMockTestResults();
+                fetchDashboardStats();
+              }}
+              className="px-4 py-2 bg-primary-500 hover:bg-primary-600 disabled:bg-primary-400 text-white rounded-lg flex items-center space-x-2 transition-colors disabled:cursor-not-allowed"
+            >
+              <span>{statsLoading ? '⏳' : '🔄'}</span>
+              <span>{statsLoading ? 'Updating...' : 'Refresh Data'}</span>
+            </motion.button>
+          </div>
+          
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -235,7 +372,7 @@ const Dashboard: React.FC = React.memo(() => {
         </motion.div>
 
         {/* Stats */}
-        <DashboardStats />
+                  <DashboardStats loading={statsLoading} userProfile={userProfile} />
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
@@ -261,9 +398,9 @@ const Dashboard: React.FC = React.memo(() => {
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-          {/* Performance Chart */}
+          {/* Study Planner */}
           <div className="lg:col-span-2">
-            <PerformanceChart />
+            <StudyPlanner />
           </div>
           
           {/* Enhanced Profile Section */}
@@ -273,6 +410,11 @@ const Dashboard: React.FC = React.memo(() => {
               testSessions={testSessions}
             />
           </div>
+        </div>
+
+        {/* Mock Test Results Section */}
+        <div className="mt-8">
+          <MockTestResults results={mockTestResults} />
         </div>
       </div>
     </div>

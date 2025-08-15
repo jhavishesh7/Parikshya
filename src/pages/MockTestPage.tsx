@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
-import { BookOpen, Clock, FileText, Play, Target, Search } from 'lucide-react';
+import { BookOpen, Clock, FileText, Play, Target, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,6 +11,8 @@ const MockTestPage: React.FC = React.memo(() => {
 	const [selectedSubject, setSelectedSubject] = useState<string>('');
 	const [loading, setLoading] = useState(false);
 	const [searchTerm, setSearchTerm] = useState('');
+	const [currentPage, setCurrentPage] = useState(1);
+	const [testsPerPage] = useState(6); // Show 6 tests per page (2 rows of 3)
 
 	useEffect(() => {
 		fetchSubjects();
@@ -19,7 +21,12 @@ const MockTestPage: React.FC = React.memo(() => {
 
 	useEffect(() => {
 		fetchMockTests();
+		setCurrentPage(1); // Reset to first page when subject changes
 	}, [selectedSubject]);
+
+	useEffect(() => {
+		setCurrentPage(1); // Reset to first page when search changes
+	}, [searchTerm]);
 
 	const fetchSubjects = useCallback(async () => {
 		try {
@@ -56,6 +63,7 @@ const MockTestPage: React.FC = React.memo(() => {
 				console.error('Error fetching mock tests:', error);
 				setMockTests([]);
 			} else {
+				console.log('Fetched mock tests:', data?.length); // Debug log
 				setMockTests(data || []);
 			}
 		} catch (error) {
@@ -75,6 +83,17 @@ const MockTestPage: React.FC = React.memo(() => {
 		test.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 		test.subjects?.display_name.toLowerCase().includes(searchTerm.toLowerCase())
 	), [mockTests, searchTerm]);
+
+	// Pagination logic
+	const indexOfLastTest = currentPage * testsPerPage;
+	const indexOfFirstTest = indexOfLastTest - testsPerPage;
+	const currentTests = filteredTests.slice(indexOfFirstTest, indexOfLastTest);
+	const totalPages = Math.ceil(filteredTests.length / testsPerPage);
+
+	const paginate = (pageNumber: number) => {
+		setCurrentPage(pageNumber);
+		window.scrollTo({ top: 0, behavior: 'smooth' });
+	};
 
 	const getDifficultyColor = useCallback((difficulty: string) => {
 		switch (difficulty) {
@@ -179,13 +198,16 @@ const MockTestPage: React.FC = React.memo(() => {
 							<p className="text-gray-300 text-base sm:text-lg">
 								Found <span className="text-primary-400 font-semibold">{filteredTests.length}</span> mock test{filteredTests.length !== 1 ? 's' : ''}
 								{selectedSubject && ` for ${subjects.find(s => s.id === selectedSubject)?.display_name}`}
+								{filteredTests.length > testsPerPage && (
+									<span className="text-gray-400"> • Showing {indexOfFirstTest + 1}-{Math.min(indexOfLastTest, filteredTests.length)} of {filteredTests.length}</span>
+								)}
 							</p>
 						</div>
 
 						{/* Tests Grid */}
-						{filteredTests.length > 0 ? (
+						{currentTests.length > 0 ? (
 							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-								{filteredTests.map((test) => (
+								{currentTests.map((test) => (
 									<motion.div
 										key={test.id}
 										initial={{ opacity: 0, y: 20 }}
@@ -259,7 +281,7 @@ const MockTestPage: React.FC = React.memo(() => {
 							/* No Tests Available */
 							<div className="text-center py-12 sm:py-16">
 								<div className="w-16 h-16 sm:w-24 sm:h-24 bg-dark-700/50 rounded-3xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
-									<FileText className="w-8 h-8 sm:w-12 sm:h-12 text-gray-500" />
+									<FileText className="w-8 w-8 sm:w-12 sm:h-12 text-gray-500" />
 								</div>
 								<h3 className="text-xl sm:text-2xl font-semibold text-white mb-3">No Mock Tests Available</h3>
 								<p className="text-gray-400 text-base sm:text-lg">
@@ -273,6 +295,44 @@ const MockTestPage: React.FC = React.memo(() => {
 								</p>
 							</div>
 						)}
+
+						{/* Pagination */}
+						{totalPages > 1 && (
+							<div className="flex items-center justify-center space-x-2 mt-8">
+								<button
+									onClick={() => paginate(currentPage - 1)}
+									disabled={currentPage === 1}
+									className="p-2 rounded-lg bg-dark-700/50 hover:bg-dark-600/50 disabled:bg-gray-700/50 disabled:cursor-not-allowed text-white transition-all duration-200"
+								>
+									<ChevronLeft className="w-5 h-5" />
+								</button>
+								
+								{/* Page Numbers */}
+								<div className="flex items-center space-x-1">
+									{Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+										<button
+											key={page}
+											onClick={() => paginate(page)}
+											className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+												currentPage === page
+													? 'bg-primary-500 text-white'
+													: 'bg-dark-700/50 text-gray-300 hover:bg-dark-600/50 hover:text-white'
+											}`}
+										>
+											{page}
+										</button>
+									))}
+								</div>
+								
+								<button
+									onClick={() => paginate(currentPage + 1)}
+									disabled={currentPage === totalPages}
+									className="p-2 rounded-lg bg-dark-700/50 hover:bg-dark-600/50 disabled:bg-gray-700/50 disabled:cursor-not-allowed text-white transition-all duration-200"
+								>
+									<ChevronRight className="w-5 h-5" />
+								</button>
+							</div>
+						)}
 					</div>
 				)}
 			</div>
@@ -280,6 +340,6 @@ const MockTestPage: React.FC = React.memo(() => {
 	);
 });
 
-MockTestPage.displayName = 'MockTestPage';
+MockTestPage.displayName = ' MockTestPage';
 
 export default MockTestPage;

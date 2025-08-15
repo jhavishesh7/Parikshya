@@ -3,19 +3,27 @@ import { motion } from 'framer-motion';
 import { TrendingUp, Target, Clock, Award } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
-const DashboardStats: React.FC = () => {
+interface DashboardStatsProps {
+  loading?: boolean;
+  userProfile?: any; // Add this prop to receive fresh profile data
+}
+
+const DashboardStats: React.FC<DashboardStatsProps> = ({ loading = false, userProfile }) => {
   const { profile } = useAuthStore();
+  
+  // Use fresh profile data if available, otherwise fall back to store
+  const currentProfile = userProfile || profile;
 
-  if (!profile) return null;
+  if (!currentProfile) return null;
 
-  const accuracyRate = profile.total_questions_answered > 0 
-    ? ((profile.correct_answers / profile.total_questions_answered) * 100).toFixed(1)
+  const accuracyRate = currentProfile.total_questions_answered > 0 
+    ? ((currentProfile.correct_answers / currentProfile.total_questions_answered) * 100).toFixed(1)
     : '0';
 
   const stats = [
     {
       title: 'Questions Answered',
-      value: profile.total_questions_answered.toLocaleString(),
+      value: currentProfile.total_questions_answered.toLocaleString(),
       icon: Target,
       color: 'from-blue-500 to-cyan-500',
       bgColor: 'bg-blue-500/10',
@@ -31,7 +39,7 @@ const DashboardStats: React.FC = () => {
     },
     {
       title: 'Study Streak',
-      value: `${profile.study_streak} days`,
+      value: `${currentProfile.study_streak} days`,
       icon: Clock,
       color: 'from-purple-500 to-pink-500',
       bgColor: 'bg-purple-500/10',
@@ -39,7 +47,7 @@ const DashboardStats: React.FC = () => {
     },
     {
       title: 'AI Ability Score',
-      value: profile.ai_ability_estimate.toFixed(2),
+      value: currentProfile.ai_ability_estimate.toFixed(2),
       icon: Award,
       color: 'from-orange-500 to-red-500',
       bgColor: 'bg-orange-500/10',
@@ -49,6 +57,14 @@ const DashboardStats: React.FC = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {loading && (
+        <div className="col-span-full text-center py-4">
+          <div className="inline-flex items-center space-x-2 text-blue-400">
+            <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+            <span>Updating dashboard data...</span>
+          </div>
+        </div>
+      )}
       {stats.map((stat, index) => (
         <motion.div
           key={stat.title}
