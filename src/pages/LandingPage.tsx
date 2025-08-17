@@ -6,22 +6,17 @@ import {
   BookOpen, 
   Target, 
   Brain, 
-  Zap, 
   TrendingUp, 
   Users, 
-  Award, 
   Play,
   Send,
   Bot,
-  ChevronRight,
   Sparkles,
   User,
-  Mail,
   Star,
   Quote,
   CheckCircle,
   ArrowRight,
-  Calendar,
   Clock,
   BarChart3,
   X,
@@ -51,46 +46,12 @@ const LandingPage: React.FC = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const [showNewsletterPopup, setShowNewsletterPopup] = useState(false);
-  const [newsletterEmail, setNewsletterEmail] = useState('');
-  const [isSubscribing, setIsSubscribing] = useState(false);
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
-  const handleStartMockTest = () => {
-    if (!user) {
-      alert('Please sign in to continue');
-      return;
-    }
-    navigate('/mock-tests');
-  };
-
-  const handleStartAdaptiveTest = () => {
-    if (!user) {
-      alert('Please sign in to continue');
-      return;
-    }
-    navigate('/adaptive-test');
-  };
-
-  const handleViewNotes = () => {
-    if (!user) {
-      alert('Please sign in to continue');
-      return;
-    }
-    navigate('/notes');
-  };
-
-  const handleViewDashboard = () => {
-    if (!user) {
-      alert('Please sign in to continue');
-      return;
-    }
-    navigate('/dashboard');
-  };
 
   const handleSignUp = () => {
     navigate('/signup');
@@ -154,44 +115,44 @@ const LandingPage: React.FC = () => {
   const testimonials = [
     {
       id: 1,
-      text: "I was nervous about my exam preparation, but practicing with Parikshya's realistic mock tests gave me confidence. The AI responses and explanations helped me understand concepts better.",
+      text: "I was nervous about my IOE entrance exam, but practicing with Parikshya's realistic mock tests gave me confidence. The AI responses and explanations helped me understand concepts better.",
       name: "Anita Tamang",
-      role: "Computer Science Student",
+      role: "IOE Pulchowk - Computer Engineering",
       avatar: "AT"
     },
     {
       id: 2,
-      text: "Parikshya helped me practice with different difficulty levels. The personalized study plans based on my performance made all the difference. Improved my score by 40%!",
+      text: "Parikshya helped me practice with different difficulty levels for my engineering entrance. The personalized study plans based on my performance made all the difference. Got into IOE Thapathali!",
       name: "Priya Thapa",
-      role: "Engineering Student",
+      role: "IOE Thapathali - Civil Engineering",
       avatar: "PT"
     },
     {
       id: 3,
       text: "The instant feedback after each practice session was incredible. I could see exactly what I was doing wrong and how to improve. Much better than studying alone!",
       name: "Rajesh Gurung",
-      role: "Business Student",
+      role: "Tribhuvan University - BBA",
       avatar: "RG"
     },
     {
       id: 4,
-      text: "Parikshya's realistic exam simulation prepared me for any type of question. The AI counselor helped me develop better study strategies.",
+      text: "Parikshya's realistic exam simulation prepared me for my CEE medical entrance test. The AI counselor helped me develop better study strategies and I aced the exam!",
       name: "Sita Sharma",
-      role: "Medical Student",
+      role: "Medical College - MBBS (CEE Qualified)",
       avatar: "SS"
     },
     {
       id: 5,
-      text: "Compared my answers with successful students and learned so much. The custom questions feature was amazing for targeted practice.",
+      text: "Compared my answers with successful students and learned so much. The custom questions feature was amazing for targeted practice for my law entrance.",
       name: "Amit Patel",
-      role: "Law Student",
+      role: "Law School - LLB",
       avatar: "AP"
     },
     {
       id: 6,
       text: "The spaced repetition system and progress tracking helped me stay motivated. I could see my improvement over time clearly.",
       name: "Neha Singh",
-      role: "Arts Student",
+      role: "Kathmandu University - Arts",
       avatar: "NS"
     }
   ];
@@ -205,75 +166,15 @@ const LandingPage: React.FC = () => {
     { name: "Purbanchal University", logo: "💜" },
     { name: "Pokhara University", logo: "🌲" },
     { name: "Lumbini University", logo: "🔴" },
-    { name: "Far Western University", logo: "🐂" }
+    { name: "Far Western University", logo: "🐂" },
+    { name: "BPKIHS", logo: "🏥" },
+    { name: "Nepal Medical College", logo: "⚕️" },
+    { name: "Manipal College", logo: "🩺" },
+    { name: "KIST Medical College", logo: "🏨" },
+    { name: "Nobel Medical College", logo: "💊" }
   ];
 
-  const handleNewsletterSubscribe = async () => {
-    if (!newsletterEmail.trim()) {
-      return;
-    }
 
-    setIsSubscribing(true);
-    try {
-      // First, try to create the table if it doesn't exist
-      const { error: createError } = await supabase.rpc('create_newsletter_table');
-      
-      // Check if email already exists
-      const { data, error } = await supabase
-        .from('newsletter')
-        .select('email')
-        .eq('email', newsletterEmail);
-
-      if (error && error.code !== 'PGRST116') {
-        throw error;
-      }
-
-      if (data && data.length > 0) {
-        // Email already exists
-        setNewsletterEmail('');
-        return;
-      }
-
-      // Insert new email
-      const { error: insertError } = await supabase
-        .from('newsletter')
-        .insert([{ email: newsletterEmail }]);
-
-      if (insertError) {
-        throw insertError;
-      }
-
-      // Show success popup
-      setShowNewsletterPopup(true);
-      setNewsletterEmail('');
-      
-      // Hide popup after 3 seconds
-      setTimeout(() => {
-        setShowNewsletterPopup(false);
-      }, 3000);
-
-    } catch (err) {
-      console.error('Newsletter subscription error:', err);
-      // Try to create table manually if RPC fails
-      try {
-        const { error: manualCreateError } = await supabase
-          .from('newsletter')
-          .insert([{ email: newsletterEmail }]);
-        
-        if (!manualCreateError) {
-          setShowNewsletterPopup(true);
-          setNewsletterEmail('');
-          setTimeout(() => {
-            setShowNewsletterPopup(false);
-          }, 3000);
-        }
-      } catch (manualErr) {
-        console.error('Manual table creation failed:', manualErr);
-      }
-    } finally {
-      setIsSubscribing(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-black">
@@ -342,8 +243,8 @@ const LandingPage: React.FC = () => {
               <span className="block text-blue-400 mt-2 sm:mt-3">university dreams</span>
             </h1>
             <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-gray-300 max-w-4xl mx-auto leading-relaxed mb-6 sm:mb-8 md:mb-10 px-2 sm:px-4">
-              Master your entrance exams with AI-powered practice that adapts to your learning style. 
-              Get real-time feedback and personalized study plans to ace your university admissions.
+              Master your Nepali university entrance exams including IOE, CEE medical entrance, and more with AI-powered practice that adapts to your learning style. 
+              Get real-time feedback and personalized study plans to ace your admissions to IOE, Tribhuvan University, and other top Nepali universities.
             </p>
             
             {/* Creative Stats Banner */}
@@ -368,15 +269,49 @@ const LandingPage: React.FC = () => {
           {/* University Logos */}
           <div className="mb-10 sm:mb-12 md:mb-16">
             <p className="text-gray-400 text-base sm:text-lg md:text-xl mb-6 sm:mb-8 md:mb-10">Trusted by students from top universities</p>
-            <div className="grid grid-cols-2 gap-4 sm:gap-6 md:gap-8 max-w-4xl mx-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8 max-w-6xl mx-auto">
               {universities.map((uni, index) => (
-                <div 
-                  key={index} 
+                <motion.div 
+                  key={index}
+                  initial={{ y: 20, opacity: 0 }}
+                  whileInView={{ y: 0, opacity: 1 }}
+                  transition={{ 
+                    duration: 0.6, 
+                    delay: index * 0.1,
+                    type: "spring",
+                    stiffness: 100
+                  }}
+                  whileHover={{ 
+                    y: -5,
+                    scale: 1.05,
+                    transition: { duration: 0.2 }
+                  }}
                   className="flex items-center justify-center space-x-2 sm:space-x-3 text-gray-400 hover:text-blue-400 transition-colors group cursor-pointer p-3 rounded-xl hover:bg-gray-800/30"
                 >
-                  <span className="text-lg sm:text-xl md:text-2xl group-hover:scale-110 transition-transform duration-300">{uni.logo}</span>
-                  <span className="font-medium text-xs sm:text-sm group-hover:text-blue-300 transition-colors text-center">{uni.name}</span>
-                </div>
+                  <motion.span 
+                    className="text-lg sm:text-xl md:text-2xl group-hover:scale-110 transition-transform duration-300"
+                    animate={{ 
+                      y: [0, -3, 0],
+                      rotate: [0, 2, -2, 0]
+                    }}
+                    transition={{ 
+                      duration: 4,
+                      repeat: Infinity,
+                      delay: index * 0.5
+                    }}
+                  >
+                    {uni.logo}
+                  </motion.span>
+                  <motion.span 
+                    className="font-medium text-xs sm:text-sm group-hover:text-blue-300 transition-colors text-center"
+                    whileHover={{ 
+                      x: [0, 2, 0],
+                      transition: { duration: 0.3 }
+                    }}
+                  >
+                    {uni.name}
+                  </motion.span>
+                </motion.div>
               ))}
             </div>
           </div>
@@ -434,8 +369,8 @@ const LandingPage: React.FC = () => {
                 Practice with Questions That Actually Matter
               </h2>
               <p className="text-base sm:text-lg text-gray-300 leading-relaxed mb-6 sm:mb-8">
-                Our AI analyzes thousands of past entrance exams to give you the most relevant practice questions. 
-                No more wasting time on outdated content - every question is designed to boost your university admission chances.
+                Our AI analyzes thousands of past Nepali entrance exams to give you the most relevant practice questions. 
+                No more wasting time on outdated content - every question is designed to boost your admission chances to IOE, Tribhuvan University, and other top Nepali universities.
               </p>
               
               {/* Creative Feature List */}
@@ -446,7 +381,7 @@ const LandingPage: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-white font-semibold text-base sm:text-lg mb-1 sm:mb-2">Exam Pattern Mastery</h3>
-                    <p className="text-sm sm:text-base text-gray-300">Learn the exact format and difficulty level of your target university's entrance exam</p>
+                    <p className="text-sm sm:text-base text-gray-300">Learn the exact format and difficulty level of your target Nepali university's entrance exam</p>
                   </div>
                 </div>
                 
@@ -562,103 +497,157 @@ const LandingPage: React.FC = () => {
                Practice Tests for Every
              </h2>
              <h3 className="text-4xl md:text-5xl font-bold text-blue-400 mb-6">
-               University Entrance Exam
+               Nepali University Entrance Exam
              </h3>
              <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-               From engineering to medical, from management to law - we've got you covered with 
-               specialized mock tests designed by experts who know what universities actually ask.
+               From IOE Pulchowk to Tribhuvan University, from CEE medical entrance to law - we've got you covered with 
+               specialized mock tests designed by experts who know what Nepali universities actually ask.
              </p>
            </div>
 
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-             {/* Mock Test Card 1 */}
-             <div className="group cursor-pointer">
-               <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 border border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-500 hover:border-blue-500/50 relative overflow-hidden">
-                 {/* Background Pattern */}
-                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                 
-                 <div className="relative z-10">
-                   <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                     <Target className="w-10 h-10 text-white" />
-                   </div>
-                   <h3 className="text-2xl font-bold text-white mb-4 text-center">Engineering Entrance</h3>
-                   <p className="text-gray-300 text-center mb-6 leading-relaxed">
-                     Master JEE, BITSAT, and state-level engineering entrance exams with our comprehensive question bank
-                   </p>
-                   <div className="flex justify-center mb-4">
-                     <span className="inline-block bg-blue-900 text-blue-300 px-4 py-2 rounded-full text-sm font-medium">
-                       2000+ Questions
-                     </span>
-            </div>
-            <div className="text-center">
-                     <span className="text-gray-400 text-sm">Physics • Chemistry • Mathematics</span>
-                   </div>
-                 </div>
-               </div>
+           <div className="relative overflow-hidden">
+             {/* Moving Background Elements */}
+             <div className="absolute inset-0">
+               <div className="absolute top-10 left-10 w-20 h-20 bg-blue-500/10 rounded-full animate-pulse"></div>
+               <div className="absolute top-20 right-20 w-16 h-16 bg-green-500/10 rounded-full animate-pulse delay-1000"></div>
+               <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-purple-500/10 rounded-full animate-pulse delay-2000"></div>
+               <div className="absolute top-1/2 right-1/3 w-24 h-24 bg-yellow-500/10 rounded-full animate-pulse delay-1500"></div>
              </div>
-
-             {/* Mock Test Card 2 */}
-             <div className="group cursor-pointer">
-               <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 border border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-500 hover:border-blue-500/50 relative overflow-hidden">
-                 {/* Background Pattern */}
-                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                 
-                 <div className="relative z-10">
-                   <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                     <BookOpen className="w-10 h-10 text-white" />
-                   </div>
-                   <h3 className="text-2xl font-bold text-white mb-4 text-center">Medical Entrance</h3>
-                   <p className="text-gray-300 text-center mb-6 leading-relaxed">
-                     Ace NEET, AIIMS, and medical college entrance tests with our specialized biology and chemistry modules
-                   </p>
-                   <div className="flex justify-center mb-4">
-                     <span className="inline-block bg-blue-900 text-blue-300 px-4 py-2 rounded-full text-sm font-medium">
-                       1500+ Questions
-                     </span>
-            </div>
-            <div className="text-center">
-                     <span className="text-gray-400 text-sm">Biology • Chemistry • Physics</span>
-                   </div>
-                 </div>
-               </div>
-             </div>
-
-             {/* Mock Test Card 3 */}
-             <div className="group cursor-pointer">
-               <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 border border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-500 hover:border-blue-500/50 relative overflow-hidden">
-                 {/* Background Pattern */}
-                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                 
-                 <div className="relative z-10">
-                   <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                     <Brain className="w-10 h-10 text-white" />
-                   </div>
-                   <h3 className="text-2xl font-bold text-white mb-4 text-center">Management & Law</h3>
-                   <p className="text-gray-300 text-center mb-6 leading-relaxed">
-                     Conquer CAT, CLAT, and other competitive exams with our logical reasoning and aptitude training
-                   </p>
-                   <div className="flex justify-center mb-4">
-                     <span className="inline-block bg-blue-900 text-blue-300 px-4 py-2 rounded-full text-sm font-medium">
-                       1000+ Questions
-                     </span>
-            </div>
-            <div className="text-center">
-                     <span className="text-gray-400 text-sm">Aptitude • Reasoning • English</span>
+             
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
+               {/* Mock Test Card 1 - IOE Engineering */}
+               <motion.div 
+                 initial={{ y: 50, opacity: 0 }}
+                 whileInView={{ y: 0, opacity: 1 }}
+                 transition={{ duration: 0.6, delay: 0.1 }}
+                 className="group cursor-pointer h-full"
+               >
+                 <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 border border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-500 hover:border-blue-500/50 relative overflow-hidden h-full flex flex-col group-hover:scale-105">
+                   {/* Background Pattern */}
+                   <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                   
+                   <div className="relative z-10 flex flex-col h-full">
+                     <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                       <Target className="w-10 h-10 text-white" />
+                     </div>
+                     <h3 className="text-2xl font-bold text-white mb-4 text-center">IOE Engineering</h3>
+                     <p className="text-gray-300 text-center mb-6 leading-relaxed flex-grow">
+                       Master IOE Pulchowk, Thapathali, and other engineering entrance exams with our comprehensive question bank
+                     </p>
+                     <div className="mt-auto">
+                       <div className="flex justify-center mb-4">
+                         <span className="inline-block bg-blue-900 text-blue-300 px-4 py-2 rounded-full text-sm font-medium">
+                           2500+ Questions
+                         </span>
+                       </div>
+                       <div className="text-center">
+                         <span className="text-gray-400 text-sm">Physics • Chemistry • Mathematics</span>
+                       </div>
+                     </div>
                    </div>
                  </div>
-               </div>
+               </motion.div>
+
+               {/* Mock Test Card 2 - Medical CEE & Health Sciences */}
+               <motion.div 
+                 initial={{ y: 50, opacity: 0 }}
+                 whileInView={{ y: 0, opacity: 1 }}
+                 transition={{ duration: 0.6, delay: 0.3 }}
+                 className="group cursor-pointer h-full"
+               >
+                 <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 border border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-500 hover:border-blue-500/50 relative overflow-hidden h-full flex flex-col group-hover:scale-105">
+                   {/* Background Pattern */}
+                   <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                   
+                   <div className="relative z-10 flex flex-col h-full">
+                     <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                       <BookOpen className="w-10 h-10 text-white" />
+                     </div>
+                     <h3 className="text-2xl font-bold text-white mb-4 text-center">Medical CEE & Health Sciences</h3>
+                     <p className="text-gray-300 text-center mb-6 leading-relaxed flex-grow">
+                       Ace the Common Entrance Examination (CEE) for medical colleges, nursing, and health sciences with our specialized biology and chemistry modules
+                     </p>
+                     <div className="mt-auto">
+                       <div className="flex justify-center mb-4">
+                         <span className="inline-block bg-blue-900 text-blue-300 px-4 py-2 rounded-full text-sm font-medium">
+                           2000+ Questions
+                         </span>
+                       </div>
+                       <div className="text-center">
+                         <span className="text-gray-400 text-sm">Biology • Chemistry • Physics • CEE Pattern</span>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+               </motion.div>
+
+               {/* Mock Test Card 3 - Law & Management */}
+               <motion.div 
+                 initial={{ y: 50, opacity: 0 }}
+                 whileInView={{ y: 0, opacity: 1 }}
+                 transition={{ duration: 0.6, delay: 0.5 }}
+                 className="group cursor-pointer h-full"
+               >
+                 <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 border border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-500 hover:border-blue-500/50 relative overflow-hidden h-full flex flex-col group-hover:scale-105">
+                   {/* Background Pattern */}
+                   <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                   
+                   <div className="relative z-10 flex flex-col h-full">
+                     <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                       <Brain className="w-10 h-10 text-white" />
+                     </div>
+                     <h3 className="text-2xl font-bold text-white mb-4 text-center">Law & Management</h3>
+                     <p className="text-gray-300 text-center mb-6 leading-relaxed flex-grow">
+                       Conquer law school entrance tests, BBA, and management exams with our logical reasoning and aptitude training
+                     </p>
+                     <div className="mt-auto">
+                       <div className="flex justify-center mb-4">
+                         <span className="inline-block bg-blue-900 text-blue-300 px-4 py-2 rounded-full text-sm font-medium">
+                           1200+ Questions
+                         </span>
+                       </div>
+                       <div className="text-center">
+                         <span className="text-gray-400 text-sm">Aptitude • Reasoning • English</span>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+               </motion.div>
+
+               {/* Mock Test Card 4 - Medical Hospitals & Institutions */}
+               <motion.div 
+                 initial={{ y: 50, opacity: 0 }}
+                 whileInView={{ y: 0, opacity: 1 }}
+                 transition={{ duration: 0.6, delay: 0.7 }}
+                 className="group cursor-pointer h-full"
+               >
+                 <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 border border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-500 hover:border-blue-500/50 relative overflow-hidden h-full flex flex-col group-hover:scale-105">
+                   {/* Background Pattern */}
+                   <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                   
+                   <div className="relative z-10 flex flex-col h-full">
+                     <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                       <BookOpen className="w-10 h-10 text-white" />
+                     </div>
+                     <h3 className="text-2xl font-bold text-white mb-4 text-center">Medical Hospitals & Institutions</h3>
+                     <p className="text-gray-300 text-center mb-6 leading-relaxed flex-grow">
+                       Prepare for entrance exams at top medical hospitals, nursing colleges, and health institutions across Nepal
+                     </p>
+                     <div className="mt-auto">
+                       <div className="flex justify-center mb-4">
+                         <span className="inline-block bg-blue-900 text-blue-300 px-4 py-2 rounded-full text-sm font-medium">
+                           1500+ Questions
+                         </span>
+                       </div>
+                       <div className="text-center">
+                         <span className="text-gray-400 text-sm">Hospital Entrance • Nursing • Health Sciences</span>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+               </motion.div>
              </div>
            </div>
-           
-           {/* Creative CTA */}
-           <div className="text-center mt-16">
-             <div className="inline-block bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer group">
-               <span className="flex items-center space-x-3">
-                 <span>🎯 Explore All Test Categories</span>
-                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-               </span>
-             </div>
-            </div>
         </div>
       </section>
 
@@ -677,12 +666,12 @@ const LandingPage: React.FC = () => {
              </h3>
              <p className="text-xl text-gray-300 max-w-3xl mx-auto">
                Real stories from real students who transformed their exam preparation with Parikshya 
-               and secured admissions to top universities across Nepal and India.
+               and secured admissions to top universities across Nepal including IOE Pulchowk, Tribhuvan University, and more.
              </p>
            </div>
 
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-             {testimonials.map((testimonial, index) => (
+             {testimonials.map((testimonial) => (
                <div
                  key={testimonial.id}
                  className="bg-gray-800 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-700/50 hover:border-blue-500/50 group relative overflow-hidden"
@@ -739,10 +728,10 @@ const LandingPage: React.FC = () => {
              <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
                Trusted by Aspirants
             </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-               Our platform has helped thousands of students achieve their university dreams. 
-               Here's what makes Parikshya the preferred choice for exam preparation.
-             </p>
+                        <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              Our platform has helped thousands of students achieve their Nepali university dreams. 
+              Here's what makes Parikshya the preferred choice for Nepali entrance exam preparation.
+            </p>
            </div>
            
            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
@@ -1044,11 +1033,11 @@ const LandingPage: React.FC = () => {
               🎯 Your Future Starts Here
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-8">
-              Ready to Ace Your University Entrance Exam?
+              Ready to Ace Your Nepali University Entrance Exam?
             </h2>
             <p className="text-xl text-gray-300 mb-10 leading-relaxed">
               Join thousands of students who have already improved their performance and secured admissions 
-              to top universities with Parikshya's AI-powered exam preparation platform.
+              to top Nepali universities like IOE Pulchowk and Tribhuvan University with Parikshya's AI-powered exam preparation platform.
             </p>
             
             {/* Creative Features Grid */}
@@ -1281,49 +1270,7 @@ const LandingPage: React.FC = () => {
          </div>
        </section>
 
-       {/* Newsletter Popup */}
-       <AnimatePresence>
-         {showNewsletterPopup && (
-           <motion.div
-             initial={{ opacity: 0 }}
-             animate={{ opacity: 1 }}
-             exit={{ opacity: 0 }}
-             transition={{ duration: 0.3 }}
-             className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
-           >
-             <motion.div
-               initial={{ scale: 0.8, opacity: 0 }}
-               animate={{ scale: 1, opacity: 1 }}
-               exit={{ scale: 0.8, opacity: 0 }}
-               transition={{ duration: 0.4, ease: "easeOut" }}
-               className="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 rounded-3xl p-12 max-w-2xl mx-auto text-center border border-blue-500/30 shadow-2xl"
-             >
-               <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-green-500 rounded-full flex items-center justify-center mx-auto mb-8 animate-bounce">
-                 <span className="text-4xl">🎉</span>
-               </div>
-               <h2 className="text-4xl font-bold text-white mb-6">
-                 Welcome to the Parikshya Family!
-               </h2>
-               <p className="text-xl text-blue-100 mb-8 leading-relaxed">
-                 You've just joined an exclusive community of <span className="text-yellow-300 font-bold">aspiring champions</span>! 
-                 Get ready for weekly doses of motivation, study hacks, and exam strategies that will transform your preparation journey.
-               </p>
-               <div className="bg-blue-800/50 rounded-2xl p-6 mb-8 border border-blue-600/30">
-                 <p className="text-blue-200 text-lg">
-                   <span className="text-yellow-300 font-semibold">✨ What's Next?</span><br/>
-                   Check your inbox for your first study tip in the next 24 hours!
-                 </p>
-               </div>
-               <button
-                 onClick={() => setShowNewsletterPopup(false)}
-                 className="px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-green-500/25"
-               >
-                 Let's Start Learning! 🚀
-               </button>
-             </motion.div>
-           </motion.div>
-         )}
-       </AnimatePresence>
+
 
        {/* Footer */}
        <footer className="bg-black py-12 border-t border-gray-800/50">
