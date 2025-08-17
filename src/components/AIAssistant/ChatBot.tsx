@@ -109,10 +109,10 @@ const ChatBot: React.FC = () => {
       className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700/50 h-96 flex flex-col"
     >
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 p-4 border-b border-gray-700/50 rounded-t-xl">
+      <div className="bg-gradient-to-r from-blue-600/20 to-blue-700/20 p-4 border-b border-gray-700/50 rounded-t-xl">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-            <Bot className="w-5 h-5 text-white" />
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+            <span className="text-white text-sm font-bold">P</span>
           </div>
           <div>
             <h3 className="text-white font-semibold">AI Study Assistant</h3>
@@ -133,7 +133,7 @@ const ChatBot: React.FC = () => {
             }`}
           >
             {!message.isUser && (
-              <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
                 <Bot className="w-3 h-3 text-white" />
               </div>
             )}
@@ -155,7 +155,7 @@ const ChatBot: React.FC = () => {
             </div>
 
             {message.isUser && (
-              <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
                 <User className="w-3 h-3 text-white" />
               </div>
             )}
@@ -168,7 +168,7 @@ const ChatBot: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             className="flex items-start space-x-3"
           >
-            <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
               <Bot className="w-3 h-3 text-white" />
             </div>
             <div className="bg-gray-700 px-4 py-2 rounded-xl rounded-bl-sm">

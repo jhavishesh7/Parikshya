@@ -217,31 +217,31 @@ const Dashboard: React.FC = React.memo(() => {
       title: 'Adaptive Test',
       description: `AI-powered personalized testing • ${dashboardStats.recentActivity} recent sessions`,
       icon: Brain,
-      color: 'from-primary-500 to-primary-600',
+      color: 'from-blue-500 to-blue-600',
       action: () => navigate('/exam'),
     },
     {
       title: 'Mock Tests',
       description: `${dashboardStats.totalMockTests} available tests • Practice with timed exams`,
       icon: Clock,
-      color: 'from-accent-orange-500 to-accent-orange-600',
+      color: 'from-blue-600 to-blue-700',
       action: () => navigate('/mock-tests'),
     },
     {
       title: 'Study Notes',
       description: `${dashboardStats.totalNotes} materials available • Access comprehensive content`,
       icon: BookOpen,
-      color: 'from-accent-green-500 to-accent-green-600',
+      color: 'from-blue-700 to-blue-800',
       action: () => navigate('/notes'),
     },
     {
       title: 'Performance',
       description: `${dashboardStats.totalQuestions} questions in database • Track your progress`,
       icon: TrendingUp,
-      color: 'from-primary-600 to-primary-700',
-      action: () => navigate('/dashboard'),
+      color: 'from-blue-800 to-blue-900',
+      action: () => navigate('/performance'),
     },
-  ], [navigate, dashboardStats]);
+  ], [dashboardStats]);
 
   if (profile?.role === 'admin') {
     return (
@@ -335,7 +335,7 @@ const Dashboard: React.FC = React.memo(() => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-dark-900 via-dark-800 to-dark-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4 sm:mb-6"></div>
+          <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4 sm:mb-6"></div>
           <p className="text-gray-400 text-base sm:text-lg">Loading your dashboard...</p>
         </div>
       </div>
@@ -343,78 +343,82 @@ const Dashboard: React.FC = React.memo(() => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-dark-900 via-dark-800 to-dark-900">
+    <div className="min-h-screen bg-black">
       <Header />
-      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        {/* Welcome Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6 sm:mb-8"
-        >
-          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-primary-500 to-accent-green-500 rounded-2xl flex items-center justify-center shadow-2xl animate-pulse-glow flex-shrink-0">
-              <Star className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-4xl font-bold text-white mb-2">
-                Welcome back, {userProfile?.full_name || profile?.full_name}!
-              </h1>
-              <p className="text-gray-300 text-base sm:text-lg">
-                Ready to continue your {userProfile?.exam_type || profile?.exam_type} exam preparation? 
-                <span className="text-accent-green-400 font-medium"> Let's achieve your goals together.</span>
-              </p>
-              <div className="mt-3">
-                <span className="text-primary-400 text-sm font-medium">Powered by Parikshya</span>
+      <div className="pt-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Welcome Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 sm:mb-8"
+          >
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-2xl animate-pulse-glow flex-shrink-0">
+                <Star className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-4xl font-bold text-white mb-2">
+                  Welcome back, {userProfile?.full_name || profile?.full_name}!
+                </h1>
+                <p className="text-gray-300 text-base sm:text-lg">
+                  Ready to continue your {userProfile?.exam_type || profile?.exam_type} exam preparation? 
+                  <span className="text-blue-400 font-medium"> Let's achieve your goals together.</span>
+                </p>
+                <div className="mt-3">
+                  <span className="text-blue-400 text-sm font-medium">Powered by Parikshya</span>
+                </div>
               </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
 
-        {/* Stats */}
+          {/* Stats */}
                   <DashboardStats loading={statsLoading} userProfile={userProfile} />
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          {quickActions.map((action, index) => (
-            <motion.button
-              key={action.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={action.action}
-              className="bg-dark-800/50 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-dark-700/50 hover:border-primary-500/50 transition-all duration-300 text-left group shadow-xl hover:shadow-2xl"
-            >
-              <div className={`w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br ${action.color} rounded-xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform shadow-lg`}>
-                <action.icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-              </div>
-              <h3 className="text-white font-semibold text-base sm:text-lg mb-2">{action.title}</h3>
-              <p className="text-gray-400 text-sm leading-relaxed">{action.description}</p>
-            </motion.button>
-          ))}
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-          {/* Study Planner */}
-          <div className="lg:col-span-2">
-            <StudyPlanner />
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {quickActions.map((action, index) => (
+              <motion.div
+                key={action.title}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-black/50 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-gray-700/50 hover:border-blue-500/50 transition-all duration-300 group cursor-pointer"
+                onClick={action.action}
+              >
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br ${action.color} rounded-xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform`}>
+                  <action.icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">
+                  {action.title}
+                </h3>
+                <p className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors leading-relaxed">
+                  {action.description}
+                </p>
+              </motion.div>
+            ))}
           </div>
-          
-          {/* Enhanced Profile Section */}
-          <div className="lg:col-span-1">
-            <ProfileSection 
-              userProfile={userProfile}
-              testSessions={testSessions}
-            />
-          </div>
-        </div>
 
-        {/* Mock Test Results Section */}
-        <div className="mt-8">
-          <MockTestResults results={mockTestResults} />
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+            {/* Study Planner */}
+            <div className="lg:col-span-2">
+              <StudyPlanner />
+            </div>
+            
+            {/* Enhanced Profile Section */}
+            <div className="lg:col-span-1">
+              <ProfileSection 
+                userProfile={userProfile}
+                testSessions={testSessions}
+              />
+            </div>
+          </div>
+
+          {/* Mock Test Results Section */}
+          <div className="mt-8">
+            <MockTestResults results={mockTestResults} />
+          </div>
         </div>
       </div>
     </div>

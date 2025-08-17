@@ -3,7 +3,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useAuthStore } from './store/authStore';
 
 // Lazy load components for better performance
+const LandingPage = lazy(() => import('./pages/LandingPage'));
 const LoginForm = lazy(() => import('./components/Auth/LoginForm'));
+const SignUpForm = lazy(() => import('./components/Auth/SignUpForm'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const ExamPage = lazy(() => import('./pages/ExamPage'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
@@ -44,10 +46,20 @@ function App() {
     <Router>
       <Suspense fallback={<LoadingSpinner />}>
         <Routes>
+          {/* Landing page is always accessible */}
+          <Route path="/" element={<LandingPage />} />
+          
+          {/* Auth routes - only accessible when not logged in */}
           <Route 
-            path="/" 
+            path="/login" 
             element={user ? <Navigate to="/dashboard" /> : <LoginForm />} 
           />
+          <Route 
+            path="/signup" 
+            element={user ? <Navigate to="/dashboard" /> : <SignUpForm />} 
+          />
+          
+          {/* Protected routes - only accessible when logged in */}
           <Route 
             path="/dashboard" 
             element={

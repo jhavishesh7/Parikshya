@@ -25,7 +25,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ loading = false, userPr
       title: 'Questions Answered',
       value: currentProfile.total_questions_answered.toLocaleString(),
       icon: Target,
-      color: 'from-blue-500 to-cyan-500',
+      color: 'from-blue-500 to-blue-600',
       bgColor: 'bg-blue-500/10',
       textColor: 'text-blue-400',
     },
@@ -33,25 +33,25 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ loading = false, userPr
       title: 'Accuracy Rate',
       value: `${accuracyRate}%`,
       icon: TrendingUp,
-      color: 'from-green-500 to-emerald-500',
+      color: 'from-green-500 to-green-600',
       bgColor: 'bg-green-500/10',
       textColor: 'text-green-400',
     },
     {
       title: 'Study Streak',
-      value: `${currentProfile.study_streak} days`,
+      value: `${currentProfile.study_streak || 0} days`,
       icon: Clock,
-      color: 'from-purple-500 to-pink-500',
-      bgColor: 'bg-purple-500/10',
-      textColor: 'text-purple-400',
+      color: 'from-blue-600 to-blue-700',
+      bgColor: 'bg-blue-600/10',
+      textColor: 'text-blue-400',
     },
     {
       title: 'AI Ability Score',
-      value: currentProfile.ai_ability_estimate.toFixed(2),
+      value: (currentProfile.ai_ability_estimate || 0).toFixed(2),
       icon: Award,
-      color: 'from-orange-500 to-red-500',
-      bgColor: 'bg-orange-500/10',
-      textColor: 'text-orange-400',
+      color: 'from-blue-700 to-blue-800',
+      bgColor: 'bg-blue-700/10',
+      textColor: 'text-blue-400',
     },
   ];
 
@@ -71,7 +71,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ loading = false, userPr
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.1 }}
-          className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50 hover:border-gray-600/50 transition-all duration-300"
+          className="bg-black/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50 hover:border-blue-500/50 transition-all duration-300"
         >
           <div className="flex items-center justify-between mb-4">
             <div className={`p-3 rounded-lg ${stat.bgColor}`}>

@@ -1,11 +1,9 @@
 
 
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
 import { BookOpen, Eye, FileText, Plus, Search, Brain, Target, Award } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-
+import { supabase } from '../lib/supabase';
 
 interface Note {
   id: string;
@@ -79,6 +77,36 @@ const NotesPage: React.FC = () => {
       setSubjects(data || []);
     } catch (error) {
       console.error('Error fetching subjects:', error);
+    }
+  };
+
+  const filteredNotesBySubject = notes.filter(note => {
+    const matchesSearch = note.title.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesSubject = !selectedSubject || note.subject_id === selectedSubject;
+    
+    return matchesSearch && matchesSubject;
+  });
+
+  const getSubjectName = (subjectId: string) => {
+    return subjects.find(s => s.id === subjectId)?.display_name || 'Unknown';
+  };
+
+  const getSubjectColor = (subjectId: string) => {
+    const subject = subjects.find(s => s.id === subjectId);
+    switch (subject?.name) {
+      case 'physics':
+        return 'from-blue-500 to-blue-600';
+      case 'chemistry':
+        return 'from-orange-500 to-orange-600';
+      case 'biology':
+        return 'from-green-500 to-green-600';
+      case 'mathematics':
+        return 'from-blue-600 to-blue-700';
+      case 'english':
+        return 'from-orange-600 to-orange-700';
+      default:
+        return 'from-gray-600 to-gray-700';
     }
   };
 
@@ -243,36 +271,6 @@ ${note.content || 'No content available'}\`;
     }
   };
 
-  const filteredNotesBySubject = notes.filter(note => {
-    const matchesSearch = note.title.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesSubject = !selectedSubject || note.subject_id === selectedSubject;
-    
-    return matchesSearch && matchesSubject;
-  });
-
-  const getSubjectName = (subjectId: string) => {
-    return subjects.find(s => s.id === subjectId)?.display_name || 'Unknown';
-  };
-
-  const getSubjectColor = (subjectId: string) => {
-    const subject = subjects.find(s => s.id === subjectId);
-    switch (subject?.name) {
-      case 'physics':
-        return 'from-primary-500 to-primary-600';
-      case 'chemistry':
-        return 'from-accent-orange-500 to-accent-orange-600';
-      case 'biology':
-        return 'from-accent-green-500 to-accent-green-600';
-      case 'mathematics':
-        return 'from-primary-600 to-primary-700';
-      case 'english':
-        return 'from-accent-orange-600 to-accent-orange-700';
-      default:
-        return 'from-dark-600 to-dark-700';
-    }
-  };
-
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -282,7 +280,7 @@ ${note.content || 'No content available'}\`;
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-dark-900 via-dark-800 to-dark-900">
+    <div className="min-h-screen bg-black">
       <div className="max-w-7xl mx-auto p-6">
         {/* Back Button */}
         <motion.div
@@ -292,7 +290,7 @@ ${note.content || 'No content available'}\`;
         >
           <button
             onClick={() => window.history.back()}
-            className="flex items-center space-x-2 px-4 py-2 bg-dark-700/50 hover:bg-dark-600/50 text-white rounded-xl transition-all duration-200 border border-dark-600/50"
+            className="flex items-center space-x-2 px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 text-white rounded-xl transition-all duration-200 border border-gray-600/50"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -307,16 +305,16 @@ ${note.content || 'No content available'}\`;
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 rounded-3xl mb-8 shadow-2xl animate-pulse-glow">
+          <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl mb-8 shadow-2xl animate-pulse-glow">
             <BookOpen className="w-12 h-12 text-white" />
           </div>
           <h1 className="text-5xl font-bold text-white mb-4">Study Notes</h1>
           <p className="text-gray-300 text-xl max-w-3xl mx-auto">
             Access comprehensive study materials, PDFs, and resources organized by subject and exam type. 
-            <span className="text-accent-green-400 font-medium"> Enhance your preparation with our curated collection.</span>
+            <span className="text-green-400 font-medium"> Enhance your preparation with our curated collection.</span>
           </p>
           <div className="mt-6">
-            <span className="text-primary-400 text-lg font-medium">Powered by Parikshya</span>
+            <span className="text-blue-400 text-lg font-medium">Powered by Parikshya</span>
           </div>
         </motion.div>
 
@@ -336,65 +334,28 @@ ${note.content || 'No content available'}\`;
                 placeholder="Search notes by title..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-dark-800/50 border border-dark-600/50 rounded-2xl text-white placeholder-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all duration-200 backdrop-blur-sm"
+                className="w-full pl-12 pr-4 py-4 bg-gray-800/50 border border-gray-600/50 rounded-2xl text-white placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 backdrop-blur-sm"
               />
             </div>
 
             {/* Subject Filter */}
-            <select
-              value={selectedSubject}
-              onChange={(e) => setSelectedSubject(e.target.value)}
-              className="px-6 py-4 bg-dark-800/50 border border-dark-600/50 rounded-2xl text-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all duration-200 backdrop-blur-sm"
-            >
-              <option value="">All Subjects</option>
-              {subjects.map((subject) => (
-                <option key={subject.id} value={subject.id}>
-                  {subject.display_name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </motion.div>
-
-        {/* Statistics Dashboard */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
-        >
-          <div className="bg-dark-800/50 backdrop-blur-sm rounded-2xl p-6 border border-dark-700/50">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center">
-                <FileText className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-gray-400 text-sm">Total Notes</p>
-                <p className="text-2xl font-bold text-white">{notes.length}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-dark-800/50 backdrop-blur-sm rounded-2xl p-6 border border-dark-700/50">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-accent-orange-500 to-accent-orange-600 rounded-xl flex items-center justify-center">
-                <Target className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-gray-400 text-sm">Subjects</p>
-                <p className="text-2xl font-bold text-white">{subjects.length}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-dark-800/50 backdrop-blur-sm rounded-2xl p-6 border border-dark-700/50">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-accent-green-500 to-accent-green-600 rounded-xl flex items-center justify-center">
-                <Brain className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-gray-400 text-sm">Available</p>
-                <p className="text-2xl font-bold text-white">{filteredNotesBySubject.length}</p>
+            <div className="relative">
+              <select
+                value={selectedSubject}
+                onChange={(e) => setSelectedSubject(e.target.value)}
+                className="appearance-none px-6 py-4 pr-12 bg-gray-800/50 border border-gray-600/50 rounded-2xl text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 backdrop-blur-sm cursor-pointer hover:border-gray-500/50 min-w-[180px]"
+              >
+                <option value="" className="bg-gray-800 text-white">All Subjects</option>
+                {subjects.map((subject) => (
+                  <option key={subject.id} value={subject.id} className="bg-gray-800 text-white">
+                    {subject.display_name}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
               </div>
             </div>
           </div>
@@ -403,7 +364,7 @@ ${note.content || 'No content available'}\`;
         {/* Loading State */}
         {loading && (
           <div className="text-center py-16">
-            <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+            <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
             <p className="text-gray-400 text-lg">Loading study materials...</p>
           </div>
         )}
@@ -413,7 +374,7 @@ ${note.content || 'No content available'}\`;
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.2 }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             {filteredNotesBySubject.map((note, index) => (
@@ -423,7 +384,7 @@ ${note.content || 'No content available'}\`;
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.1 * index }}
                 whileHover={{ scale: 1.02, y: -5 }}
-                className="bg-dark-800/50 backdrop-blur-sm rounded-2xl p-6 border border-dark-700/50 hover:border-primary-500/50 transition-all duration-300 shadow-xl hover:shadow-2xl"
+                className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 hover:border-blue-500/50 transition-all duration-300 shadow-xl hover:shadow-2xl"
               >
                 {/* Subject Badge */}
                 <div className="flex items-center justify-between mb-4">
@@ -442,7 +403,7 @@ ${note.content || 'No content available'}\`;
                 <div className="flex space-x-3">
                   <button
                     onClick={() => handleViewNote(note)}
-                    className="flex-1 px-4 py-3 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white rounded-xl font-medium transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg shadow-primary-500/25"
+                    className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-medium transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg shadow-blue-500/25"
                   >
                     <Eye className="w-4 h-4" />
                     <span>View Note</span>
@@ -460,7 +421,7 @@ ${note.content || 'No content available'}\`;
             animate={{ opacity: 1, y: 0 }}
             className="text-center py-16"
           >
-            <div className="w-24 h-24 bg-dark-700/50 rounded-3xl flex items-center justify-center mx-auto mb-6">
+            <div className="w-24 h-24 bg-gray-700/50 rounded-3xl flex items-center justify-center mx-auto mb-6">
               <FileText className="w-12 h-12 text-gray-500" />
             </div>
             <h3 className="text-2xl font-semibold text-white mb-3">No Notes Found</h3>
@@ -472,8 +433,6 @@ ${note.content || 'No content available'}\`;
             </p>
           </motion.div>
         )}
-
-
       </div>
     </div>
   );

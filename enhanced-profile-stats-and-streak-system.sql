@@ -4,7 +4,7 @@
 -- 1. Create mock_test_sessions table to track when tests start and complete
 CREATE TABLE IF NOT EXISTS mock_test_sessions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE, -- Reference auth.users directly
     mock_test_id UUID REFERENCES mock_tests(id) ON DELETE CASCADE,
     started_at TIMESTAMP DEFAULT NOW(),
     completed_at TIMESTAMP,
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS mock_test_sessions (
 CREATE TABLE IF NOT EXISTS mock_test_results (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     session_id UUID REFERENCES mock_test_sessions(id) ON DELETE CASCADE,
-    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     mock_test_id UUID REFERENCES mock_tests(id) ON DELETE CASCADE,
     score INTEGER NOT NULL, -- Raw score (e.g., 15 out of 20)
     total_questions INTEGER NOT NULL,
@@ -37,12 +37,30 @@ RETURNS TRIGGER AS $$
 DECLARE
     profile_record RECORD;
 BEGIN
-    -- Get the current profile
+    -- Get the current profile using user_id from auth.users
     SELECT * INTO profile_record 
     FROM profiles 
-    WHERE id = NEW.user_id;
+    WHERE user_id = NEW.user_id;
     
     IF NOT FOUND THEN
+        -- If no profile exists, create one
+        INSERT INTO profiles (user_id, email, full_name, exam_type, role, total_questions_answered, correct_answers, study_streak, weak_topics, strong_topics, last_active, created_at, updated_at)
+        VALUES (
+            NEW.user_id,
+            (SELECT email FROM auth.users WHERE id = NEW.user_id),
+            'Student',
+            'IOE',
+            'student',
+            NEW.total_questions,
+            0,
+            0,
+            '{}',
+            '{}',
+            CURRENT_TIMESTAMP,
+            CURRENT_TIMESTAMP,
+            CURRENT_TIMESTAMP
+        );
+        
         RETURN NEW;
     END IF;
     
@@ -52,7 +70,7 @@ BEGIN
         total_questions_answered = COALESCE(total_questions_answered, 0) + NEW.total_questions,
         last_active = CURRENT_TIMESTAMP,
         updated_at = CURRENT_TIMESTAMP
-    WHERE id = NEW.user_id;
+    WHERE user_id = NEW.user_id;
     
     RETURN NEW;
 END;
@@ -81,7 +99,7 @@ BEGIN
     -- Get the current profile
     SELECT * INTO profile_record 
     FROM profiles 
-    WHERE id = NEW.user_id;
+    WHERE user_id = NEW.user_id;
     
     IF NOT FOUND THEN
         RETURN NEW;
@@ -103,7 +121,7 @@ BEGIN
         ai_ability_estimate = new_ai_ability,
         last_active = CURRENT_TIMESTAMP,
         updated_at = CURRENT_TIMESTAMP
-    WHERE id = NEW.user_id;
+    WHERE user_id = NEW.user_id;
     
     -- Update weak/strong topics based on performance
     PERFORM update_user_topics_from_mock_test(NEW.user_id, NEW.mock_test_id, accuracy_score);
@@ -142,7 +160,7 @@ BEGIN
     
     -- Get current weak/strong topics
     SELECT weak_topics, strong_topics INTO current_weak_topics, current_strong_topics
-    FROM profiles WHERE id = user_uuid;
+    FROM profiles WHERE user_id = user_uuid;
     
     -- Initialize arrays if NULL
     current_weak_topics := COALESCE(current_weak_topics, '{}');
@@ -173,7 +191,7 @@ BEGIN
         weak_topics = new_weak_topics,
         strong_topics = new_strong_topics,
         updated_at = CURRENT_TIMESTAMP
-    WHERE id = user_uuid;
+    WHERE user_id = user_uuid;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -249,8 +267,8 @@ BEGIN
         COUNT(mts.id) as mock_test_count,
         (AVG(mts.score::REAL / mts.total_questions::REAL) * 100) as average_mock_score
     FROM profiles p
-    LEFT JOIN mock_test_sessions mts ON p.id = mts.user_id AND mts.status = 'completed'
-    WHERE p.id = user_uuid
+    LEFT JOIN mock_test_sessions mts ON p.user_id = mts.user_id AND mts.status = 'completed'
+    WHERE p.user_id = user_uuid
     GROUP BY p.id, p.total_questions_answered, p.correct_answers;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -271,7 +289,7 @@ DECLARE
     strong_topics_array TEXT[];
 BEGIN
     -- Get user profile
-    SELECT * INTO user_profile FROM profiles WHERE id = user_uuid;
+    SELECT * INTO user_profile FROM profiles WHERE user_id = user_uuid;
     
     IF NOT FOUND THEN
         RETURN;
@@ -332,34 +350,11 @@ CREATE INDEX IF NOT EXISTS idx_mock_test_sessions_status ON mock_test_sessions(s
 CREATE INDEX IF NOT EXISTS idx_mock_test_results_user_id ON mock_test_results(user_id);
 CREATE INDEX IF NOT EXISTS idx_mock_test_results_test_id ON mock_test_results(mock_test_id);
 CREATE INDEX IF NOT EXISTS idx_mock_test_results_completed_at ON mock_test_results(completed_at);
+CREATE INDEX IF NOT EXISTS idx_profiles_user_id ON profiles(user_id);
 CREATE INDEX IF NOT EXISTS idx_profiles_last_active ON profiles(last_active);
 CREATE INDEX IF NOT EXISTS idx_profiles_study_streak ON profiles(study_streak);
 
--- 14. Add RLS policies for the new tables
-ALTER TABLE mock_test_sessions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE mock_test_results ENABLE ROW LEVEL SECURITY;
-
--- RLS policies for mock_test_sessions
-CREATE POLICY "Users can view their own mock test sessions" ON mock_test_sessions
-    FOR SELECT USING (auth.uid()::text = user_id::text);
-
-CREATE POLICY "Users can insert their own mock test sessions" ON mock_test_sessions
-    FOR INSERT WITH CHECK (auth.uid()::text = user_id::text);
-
-CREATE POLICY "Users can update their own mock test sessions" ON mock_test_sessions
-    FOR UPDATE USING (auth.uid()::text = user_id::text);
-
--- RLS policies for mock_test_results
-CREATE POLICY "Users can view their own mock test results" ON mock_test_results
-    FOR SELECT USING (auth.uid()::text = user_id::text);
-
-CREATE POLICY "Users can insert their own mock test results" ON mock_test_results
-    FOR INSERT WITH CHECK (auth.uid()::text = user_id::text);
-
-CREATE POLICY "Users can update their own mock test results" ON mock_test_results
-    FOR UPDATE USING (auth.uid()::text = user_id::text);
-
--- 15. Create a view for easy access to student performance data
+-- 14. Create a view for easy access to student performance data
 CREATE OR REPLACE VIEW student_performance_summary AS
 SELECT 
     p.id,
@@ -381,7 +376,7 @@ SELECT
     (AVG(mts.score::REAL / mts.total_questions::REAL) * 100) as average_mock_score,
     MAX(mts.completed_at) as last_mock_test_date
 FROM profiles p
-LEFT JOIN mock_test_sessions mts ON p.id = mts.user_id AND mts.status = 'completed'
+LEFT JOIN mock_test_sessions mts ON p.user_id = mts.user_id AND mts.status = 'completed'
 WHERE p.role = 'student'
 GROUP BY p.id, p.full_name, p.exam_type, p.total_questions_answered, p.correct_answers, 
          p.study_streak, p.weak_topics, p.strong_topics, p.last_active, p.ai_ability_estimate;
@@ -389,7 +384,7 @@ GROUP BY p.id, p.full_name, p.exam_type, p.total_questions_answered, p.correct_a
 -- Grant access to the view
 GRANT SELECT ON student_performance_summary TO authenticated;
 
--- 16. Create function to manually trigger streak update (useful for testing)
+-- 15. Create function to manually trigger streak update (useful for testing)
 CREATE OR REPLACE FUNCTION force_streak_update(user_uuid UUID)
 RETURNS TEXT AS $$
 DECLARE
@@ -398,7 +393,7 @@ BEGIN
     -- Update last_active to trigger streak calculation
     UPDATE profiles 
     SET last_active = CURRENT_TIMESTAMP
-    WHERE id = user_uuid;
+    WHERE user_id = user_uuid;
     
     GET DIAGNOSTICS result = ROW_COUNT;
     
@@ -413,7 +408,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Grant execute permission
 GRANT EXECUTE ON FUNCTION force_streak_update(UUID) TO authenticated;
 
--- 17. Final verification - check if everything was created correctly
+-- 16. Final verification - check if everything was created correctly
 SELECT 
     'Tables created:' as status,
     COUNT(*) as count

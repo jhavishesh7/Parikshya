@@ -6,9 +6,6 @@ import {
   BookOpen, 
   Clock, 
   Target, 
-  Brain, 
-  TrendingUp, 
-  TrendingDown,
   Plus,
   Edit3,
   Trash2,
@@ -57,8 +54,6 @@ interface StudyReminder {
 const StudyPlanner: React.FC = () => {
   const { profile } = useAuthStore();
   const [studyPlans, setStudyPlans] = useState<StudyPlan[]>([]);
-  const [studySessions, setStudySessions] = useState<StudySession[]>([]);
-  const [studyReminders, setStudyReminders] = useState<StudyReminder[]>([]);
   const [weakTopics, setWeakTopics] = useState<string[]>([]);
   const [strongTopics, setStrongTopics] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,7 +64,6 @@ const StudyPlanner: React.FC = () => {
   const [timerMode, setTimerMode] = useState<'pomodoro' | 'break' | 'long-break'>('pomodoro');
   const [timeRemaining, setTimeRemaining] = useState(25 * 60); // 25 minutes in seconds
   const [currentPlan, setCurrentPlan] = useState<StudyPlan | null>(null);
-  const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
 
   // Form state
   const [showPlanForm, setShowPlanForm] = useState(false);
@@ -128,7 +122,7 @@ const StudyPlanner: React.FC = () => {
           .limit(10);
         
         if (sessionsData) {
-          setStudySessions(sessionsData);
+          // setStudySessions(sessionsData); // This state was removed
         }
       } catch (error) {
         console.log('Study sessions table not available yet');
@@ -144,7 +138,7 @@ const StudyPlanner: React.FC = () => {
           .order('reminder_time', { ascending: true });
         
         if (remindersData) {
-          setStudyReminders(remindersData);
+          // setStudyReminders(remindersData); // This state was removed
         }
       } catch (error) {
         console.log('Study reminders table not available yet');
@@ -248,7 +242,7 @@ const StudyPlanner: React.FC = () => {
     setTimeRemaining(plan.pomodoro_duration * 60);
     setTimerMode('pomodoro');
     setActiveTab('timer');
-    setSessionStartTime(new Date());
+    // setSessionStartTime(new Date()); // This state was removed
   };
 
   const toggleTimer = () => {
@@ -303,9 +297,9 @@ const StudyPlanner: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="bg-dark-800/50 backdrop-blur-sm rounded-2xl p-6 border border-dark-700/50">
+      <div className="bg-black/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-400">Loading study planner...</p>
         </div>
       </div>
@@ -313,7 +307,7 @@ const StudyPlanner: React.FC = () => {
   }
 
   return (
-    <div className="bg-dark-800/50 backdrop-blur-sm rounded-2xl p-6 border border-dark-700/50">
+    <div className="bg-black/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-white">Study Planner</h2>
@@ -322,8 +316,8 @@ const StudyPlanner: React.FC = () => {
             onClick={() => setActiveTab('topics')}
             className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
               activeTab === 'topics'
-                ? 'bg-primary-500 text-white'
-                : 'bg-dark-700/50 text-gray-300 hover:bg-dark-600/50 hover:text-white'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 hover:text-white'
             }`}
           >
             Topics Analysis
@@ -332,18 +326,19 @@ const StudyPlanner: React.FC = () => {
             onClick={() => setActiveTab('planner')}
             className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
               activeTab === 'planner'
-                ? 'bg-primary-500 text-white'
-                : 'bg-dark-700/50 text-gray-300 hover:bg-dark-600/50 hover:text-white'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 hover:text-white'
             }`}
           >
-            Study Plans
+            <Plus className="w-4 h-4 mr-2" />
+            New Plan
           </button>
           <button
             onClick={() => setActiveTab('timer')}
             className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
               activeTab === 'timer'
-                ? 'bg-primary-500 text-white'
-                : 'bg-dark-700/50 text-gray-300 hover:bg-dark-600/50 hover:text-white'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 hover:text-white'
             }`}
           >
             Pomodoro Timer
@@ -458,7 +453,7 @@ const StudyPlanner: React.FC = () => {
                   key={plan.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-dark-700/50 rounded-lg p-4 border border-dark-600/50"
+                  className="bg-gray-700/50 rounded-lg p-4 border border-gray-600/50"
                 >
                   <div className="flex justify-between items-start mb-3">
                     <div>
@@ -587,14 +582,12 @@ const StudyPlanner: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setShowPlanForm(false)}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-dark-800 rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
+              className="bg-gray-800 rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
             >
               {/* Modal Header */}
               <div className="flex items-center justify-between mb-6">
@@ -615,8 +608,8 @@ const StudyPlanner: React.FC = () => {
                     type="text"
                     value={planForm.title}
                     onChange={(e) => setPlanForm(prev => ({ ...prev, title: e.target.value }))}
-                    className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white focus:border-primary-500 focus:outline-none"
-                    placeholder="e.g., Physics Fundamentals"
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+                    placeholder="Enter plan title..."
                   />
                 </div>
                 
@@ -625,7 +618,7 @@ const StudyPlanner: React.FC = () => {
                   <textarea
                     value={planForm.description}
                     onChange={(e) => setPlanForm(prev => ({ ...prev, description: e.target.value }))}
-                    className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white focus:border-primary-500 focus:outline-none"
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
                     rows={3}
                     placeholder="Describe your study goals..."
                   />
@@ -638,7 +631,7 @@ const StudyPlanner: React.FC = () => {
                       type="number"
                       value={planForm.study_hours_per_day}
                       onChange={(e) => setPlanForm(prev => ({ ...prev, study_hours_per_day: parseInt(e.target.value) || 2 }))}
-                      className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white focus:border-primary-500 focus:outline-none"
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
                       min="1"
                       max="8"
                     />
@@ -650,7 +643,7 @@ const StudyPlanner: React.FC = () => {
                       type="time"
                       value={planForm.reminder_time}
                       onChange={(e) => setPlanForm(prev => ({ ...prev, reminder_time: e.target.value }))}
-                      className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white focus:border-primary-500 focus:outline-none"
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -662,7 +655,7 @@ const StudyPlanner: React.FC = () => {
                       type="number"
                       value={planForm.pomodoro_duration}
                       onChange={(e) => setPlanForm(prev => ({ ...prev, pomodoro_duration: parseInt(e.target.value) || 25 }))}
-                      className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white focus:border-primary-500 focus:outline-none"
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
                       min="15"
                       max="60"
                     />
@@ -674,7 +667,7 @@ const StudyPlanner: React.FC = () => {
                       type="number"
                       value={planForm.break_duration}
                       onChange={(e) => setPlanForm(prev => ({ ...prev, break_duration: parseInt(e.target.value) || 5 }))}
-                      className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white focus:border-primary-500 focus:outline-none"
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
                       min="1"
                       max="15"
                     />
@@ -686,7 +679,7 @@ const StudyPlanner: React.FC = () => {
                       type="number"
                       value={planForm.long_break_duration}
                       onChange={(e) => setPlanForm(prev => ({ ...prev, long_break_duration: parseInt(e.target.value) || 15 }))}
-                      className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white focus:border-primary-500 focus:outline-none"
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
                       min="10"
                       max="30"
                     />
@@ -704,7 +697,7 @@ const StudyPlanner: React.FC = () => {
                 </button>
                 <button
                   onClick={createStudyPlan}
-                  className="flex-1 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors"
+                  className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
                 >
                   Create Plan
                 </button>
