@@ -95,31 +95,31 @@ const Header: React.FC = () => {
             {/* User Profile and Actions */}
             {user && (
               <div className="flex items-center space-x-2 sm:space-x-4">
-                {/* Mobile Menu Button */}
+                {/* Mobile Menu Button - Only show on mobile */}
                 <button
                   onClick={() => setIsMobileMenuOpen(true)}
-                  className="md:hidden p-2 text-gray-300 hover:text-white transition-colors"
+                  className="md:hidden p-2 text-gray-300 hover:text-white hover:bg-dark-700/50 rounded-lg transition-all duration-200"
                 >
                   <Menu className="w-5 h-5" />
                 </button>
                 
-                <div className="flex items-center space-x-2 bg-dark-700/50 backdrop-blur-sm px-3 py-2 rounded-lg border border-dark-600/50">
+                {/* Desktop User Profile - Hidden on mobile */}
+                <div className="hidden md:flex items-center space-x-2 bg-dark-700/50 backdrop-blur-sm px-3 py-2 rounded-lg border border-dark-600/50">
                   <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-accent-orange-500 to-accent-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <User className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                    <User className="w-3 h-3 sm:w-4 sm:w-4 text-white" />
                   </div>
-                  <span className="text-white font-medium text-xs sm:text-sm hidden sm:block">{profile?.full_name || 'User'}</span>
-                  <span className="text-white font-medium text-xs sm:text-sm sm:hidden">{profile?.email?.split('@')[0] || 'User'}</span>
+                  <span className="text-white font-medium text-xs sm:text-sm">{profile?.full_name || 'User'}</span>
                 </div>
                 
+                {/* Desktop Logout Button - Hidden on mobile */}
                 <motion.button
                   onClick={handleSignOut}
-                  className="px-3 py-2 sm:px-4 sm:py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 flex items-center space-x-1 sm:space-x-2 shadow-lg shadow-red-600/25"
+                  className="hidden md:flex px-3 py-2 sm:px-4 sm:py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 items-center space-x-1 sm:space-x-2 shadow-lg shadow-red-600/25"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Logout</span>
-                  <span className="sm:hidden">Out</span>
+                  <span>Logout</span>
                 </motion.button>
               </div>
             )}
@@ -130,22 +130,33 @@ const Header: React.FC = () => {
       {/* Mobile Menu */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed top-0 right-0 bottom-0 w-full sm:w-80 bg-dark-900 z-50 border-l border-dark-700/50 shadow-2xl"
-          >
-            <div className="flex justify-between items-center p-6 border-b border-dark-700/50">
-              <h2 className="text-2xl font-bold text-white">Menu</h2>
-              <button
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-dark-700/50 rounded-lg"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
+          <>
+            {/* Backdrop Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            
+            {/* Mobile Menu Panel */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="fixed top-0 right-0 bottom-0 w-full sm:w-80 bg-dark-900 z-50 border-l border-dark-700/50 shadow-2xl"
+            >
+              <div className="flex justify-between items-center p-6 border-b border-dark-700/50">
+                <h2 className="text-2xl font-bold text-white">Menu</h2>
+                <button
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-dark-700/50 rounded-lg"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
             
             <nav className="flex flex-col h-full">
               <div className="flex-1 p-6">
@@ -198,10 +209,11 @@ const Header: React.FC = () => {
               </div>
             </nav>
           </motion.div>
-        )}
-      </AnimatePresence>
-    </>
-  );
+        </>
+      )}
+    </AnimatePresence>
+  </>
+);
 };
 
 export default Header;

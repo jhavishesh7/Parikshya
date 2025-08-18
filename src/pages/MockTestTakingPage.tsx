@@ -22,6 +22,7 @@ const MockTestTakingPage: React.FC = () => {
 	const [showInstructions, setShowInstructions] = useState(true);
 	const [sessionId, setSessionId] = useState<string | null>(null);
 	const [sessionLoading, setSessionLoading] = useState(false);
+	const [notification, setNotification] = useState<{ message: string; type: 'success' | 'info' | 'warning' } | null>(null);
 
 	useEffect(() => {
 		if (testId) {
@@ -55,7 +56,7 @@ const MockTestTakingPage: React.FC = () => {
 				.from('mock_tests')
 				.select(`
 					*,
-					subjects!inner(display_name, name)
+					subjects(display_name, name)
 				`)
 				.eq('id', testId)
 				.single();
@@ -65,6 +66,7 @@ const MockTestTakingPage: React.FC = () => {
 				return;
 			}
 
+			console.log('Mock test data:', testData); // Debug log
 			setMockTest(testData);
 
 			// Fetch questions for this mock test
@@ -72,7 +74,7 @@ const MockTestTakingPage: React.FC = () => {
 				.from('mock_questions')
 				.select(`
 					*,
-					questions!inner(
+					questions(
 						id,
 						question_text,
 						options,
@@ -90,8 +92,18 @@ const MockTestTakingPage: React.FC = () => {
 				return;
 			}
 
+			console.log('Questions data:', questionsData); // Debug log
+
+			// Filter out questions that don't have the questions relationship
+			const validQuestions = questionsData?.filter(q => q.questions) || [];
+			
+			if (validQuestions.length === 0) {
+				console.error('No valid questions found for mock test');
+				return;
+			}
+
 			// Transform the data to match the expected format
-			const transformedQuestions = questionsData.map(q => ({
+			const transformedQuestions = validQuestions.map(q => ({
 				id: q.questions.id,
 				question_text: q.questions.question_text,
 				options: q.questions.options,
@@ -102,6 +114,7 @@ const MockTestTakingPage: React.FC = () => {
 				difficulty_level: q.difficulty_level
 			}));
 
+			console.log('Transformed questions:', transformedQuestions); // Debug log
 			setQuestions(transformedQuestions);
 			setTimeLeft(testData.duration_minutes * 60);
 		} catch (error) {
@@ -163,13 +176,25 @@ const MockTestTakingPage: React.FC = () => {
 	};
 
 	const handleSaveAndContinue = () => {
-		if (answers[q.id]) {
-			setSavedQuestions(prev => ({ ...prev, [q.id]: true }));
+		const currentQuestion = questions[current];
+		if (currentQuestion && answers[currentQuestion.id] !== undefined) {
+			setSavedQuestions(prev => ({ ...prev, [currentQuestion.id]: true }));
+			setNotification({ message: 'Answer saved successfully!', type: 'success' });
+			
 			// Auto-advance to next question if not the last one
 			if (current < questions.length - 1) {
 				setCurrent(current + 1);
 			}
+		} else {
+			// If no answer is selected, show a warning but still advance
+			setNotification({ message: 'No answer selected, but continuing to next question', type: 'warning' });
+			if (current < questions.length - 1) {
+				setCurrent(current + 1);
+			}
 		}
+		
+		// Clear notification after 3 seconds
+		setTimeout(() => setNotification(null), 3000);
 	};
 
 	const handleMarkForReview = (questionId: string) => {
@@ -267,7 +292,24 @@ const MockTestTakingPage: React.FC = () => {
 				<div className="text-center">
 					<XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
 					<h2 className="text-2xl font-bold text-white mb-4">Test Not Found</h2>
-					<p className="text-gray-300 mb-6">The mock test you're looking for doesn't exist.</p>
+					<p className="text-gray-300 mb-6">
+						{!mockTest 
+							? "The mock test you're looking for doesn't exist." 
+							: "This mock test has no questions available."
+						}
+					</p>
+					<div className="space-y-3 mb-6">
+						{!mockTest && (
+							<p className="text-sm text-gray-400">Test ID: {testId}</p>
+						)}
+						{mockTest && (
+							<div className="text-sm text-gray-400">
+								<p>Test Name: {mockTest.name}</p>
+								<p>Status: {mockTest.status}</p>
+								<p>Total Questions: {mockTest.total_questions}</p>
+							</div>
+						)}
+					</div>
 					<button
 						onClick={() => navigate('/mock-tests')}
 						className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
@@ -325,7 +367,7 @@ const MockTestTakingPage: React.FC = () => {
 									<Target className="w-5 h-5 text-blue-400" />
 									<span className="text-white font-semibold">Passing Score</span>
 								</div>
-								<span className="text-white text-sm sm:text-base">Passing Score: {mockTest.passing_score || 60}%</span>
+								<span className="text-gray-300">{mockTest.passing_score || 60}%</span>
 							</div>
 						</div>
 					</div>
@@ -418,7 +460,7 @@ const MockTestTakingPage: React.FC = () => {
 	// Main Test Interface
 	return (
 		<div className="min-h-screen bg-black py-8 px-4">
-			<div className="max-w-6xl mx-auto">
+			<div className="max-w-7xl mx-auto">
 				{/* Header */}
 				<div className="bg-gray-800/90 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 mb-6 shadow-xl">
 					<div className="flex items-center justify-between mb-4">
@@ -448,137 +490,244 @@ const MockTestTakingPage: React.FC = () => {
 					</div>
 				</div>
 
-				{/* Question Navigator */}
-				<div className="bg-gray-800/90 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-gray-700/50 mb-6 sm:mb-8 shadow-xl">
-					<h3 className="text-lg font-semibold text-white mb-4 text-center">Question Navigator</h3>
-					<div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 sm:gap-3">
-						{questions.map((_, index) => (
-							<button
-								key={index}
-								onClick={() => setCurrent(index)}
-								disabled={!testStarted || submitted}
-								className={`w-full aspect-square rounded-lg transition-all duration-200 flex items-center justify-center text-xs font-medium ${
-									index === current
-										? 'bg-blue-600 text-white ring-2 ring-blue-400'
-										: answers[questions[index].id] !== undefined
-											? 'bg-green-600 text-white'
-											: markedForReview[questions[index].id]
+				{/* Main Content - Side by Side Layout */}
+				<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+					{/* Question Section - Takes 2/3 of the space */}
+					<div className="lg:col-span-2">
+						{/* Notification */}
+						{notification && (
+							<motion.div
+								initial={{ opacity: 0, y: -10 }}
+								animate={{ opacity: 1, y: 0 }}
+								exit={{ opacity: 0, y: -10 }}
+								className={`mb-4 p-4 rounded-lg border ${
+									notification.type === 'success' 
+										? 'bg-green-500/20 border-green-500/30 text-green-400'
+										: notification.type === 'warning'
+										? 'bg-orange-500/20 border-orange-500/30 text-orange-400'
+										: 'bg-blue-500/20 border-blue-500/30 text-blue-400'
+								}`}
+							>
+								<div className="flex items-center space-x-2">
+									{notification.type === 'success' ? (
+										<CheckCircle className="w-4 h-4" />
+									) : notification.type === 'warning' ? (
+										<AlertTriangle className="w-4 h-4" />
+									) : (
+										<FileText className="w-4 h-4" />
+									)}
+									<span className="text-sm font-medium">{notification.message}</span>
+								</div>
+							</motion.div>
+						)}
+
+						{/* Question Card */}
+						<div className="bg-gray-800/90 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl">
+							{/* Question Header */}
+							<div className="flex items-center justify-between mb-6">
+								<div className="flex items-center space-x-4">
+									<span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+										Question {current + 1} of {questions.length}
+									</span>
+									<span className="bg-gray-700 text-gray-300 px-3 py-1 rounded-full text-sm">
+										{q.topic}
+									</span>
+								</div>
+								<div className="flex items-center space-x-2">
+									<button
+										onClick={() => handleMarkForReview(q.id)}
+										className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+											markedForReview[q.id]
 												? 'bg-orange-500 text-white'
 												: 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-								} ${
-									!testStarted || submitted ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:scale-105'
-								}`}
-								title={`Question ${index + 1}${answers[questions[index].id] !== undefined ? ' - Answered' : ''}${markedForReview[questions[index].id] ? ' - Marked for Review' : ''}`}
-							>
-								{index + 1}
-							</button>
-						))}
+										}`}
+									>
+										{markedForReview[q.id] ? 'Marked' : 'Mark for Review'}
+									</button>
+								</div>
+							</div>
+
+							{/* Question Text */}
+							<div className="mb-8">
+								<p className="text-white text-lg leading-relaxed">{q.question_text}</p>
+							</div>
+
+							{/* Options */}
+							<div className="space-y-3 mb-8">
+								{q.options.map((option: string, index: number) => (
+									<button
+										key={index}
+										onClick={() => handleAnswerSelect(q.id, index)}
+										disabled={submitted}
+										className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 ${
+											answers[q.id] === index
+												? 'border-blue-500 bg-blue-500/20 text-white'
+												: 'border-gray-600 hover:border-gray-500 bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
+										} ${
+											submitted ? 'cursor-not-allowed' : 'cursor-pointer hover:scale-[1.02]'
+										}`}
+									>
+										<span className="font-medium">{String.fromCharCode(65 + index)}.</span> {option}
+									</button>
+								))}
+							</div>
+
+							{/* Answer Status Indicator */}
+							{answers[q.id] !== undefined && (
+								<div className="mb-6 p-3 bg-green-500/20 border border-green-500/30 rounded-lg">
+									<div className="flex items-center space-x-2 text-green-400">
+										<CheckCircle className="w-4 h-4" />
+										<span className="text-sm font-medium">
+											Answer selected: Option {String.fromCharCode(65 + answers[q.id])}
+										</span>
+									</div>
+								</div>
+							)}
+
+							{/* Navigation */}
+							<div className="flex items-center justify-between">
+								<button
+									onClick={() => setCurrent(Math.max(0, current - 1))}
+									disabled={current === 0}
+									className="px-6 py-3 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-500 text-white rounded-lg transition-colors flex items-center space-x-2"
+								>
+									<ArrowLeft className="w-4 h-4" />
+									<span>Previous</span>
+								</button>
+								
+								<div className="flex items-center space-x-3">
+									<button
+										onClick={handleSaveAndContinue}
+										className={`px-6 py-3 transition-colors flex items-center space-x-2 rounded-lg ${
+											current === questions.length - 1
+												? 'bg-green-600 hover:bg-green-700 text-white'
+												: 'bg-blue-600 hover:bg-blue-700 text-white'
+										}`}
+									>
+										<span>
+											{current === questions.length - 1 
+												? 'Save & Review' 
+												: answers[questions[current]?.id] !== undefined 
+													? 'Save & Continue' 
+													: 'Continue'
+											}
+										</span>
+										{current < questions.length - 1 && <ChevronRight className="w-4 h-4" />}
+									</button>
+								</div>
+							</div>
+						</div>
+
+						{/* Submit Button */}
+						{current === questions.length - 1 && (
+							<div className="text-center mt-6">
+								<button
+									onClick={handleSubmit}
+									className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-xl"
+								>
+									Submit Test
+								</button>
+							</div>
+						)}
 					</div>
-					<div className="flex flex-wrap items-center justify-center gap-4 mt-4 text-xs text-gray-400">
-						<div className="flex items-center space-x-2">
-							<div className="w-3 h-3 bg-blue-600 rounded"></div>
-							<span>Current</span>
-						</div>
-						<div className="flex items-center space-x-2">
-							<div className="w-3 h-3 bg-green-600 rounded"></div>
-							<span>Answered</span>
-						</div>
-						<div className="flex items-center space-x-2">
-							<div className="w-3 h-3 bg-orange-500 rounded"></div>
-							<span>Marked</span>
-						</div>
-						<div className="flex items-center space-x-2">
-							<div className="w-3 h-3 bg-gray-700 rounded"></div>
-							<span>Unanswered</span>
+
+					{/* Question Navigator - Takes 1/3 of the space */}
+					<div className="lg:col-span-1">
+						<div className="bg-gray-800/90 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl sticky top-8">
+							<h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+								<Target className="w-5 h-5 text-blue-400" />
+								<span>Question Navigator</span>
+							</h3>
+							
+							{/* Progress Bar */}
+							<div className="mb-4">
+								<div className="flex justify-between text-sm text-gray-400 mb-2">
+									<span>Progress</span>
+									<span>{Math.round((Object.keys(answers).length / questions.length) * 100)}%</span>
+								</div>
+								<div className="w-full bg-gray-700 rounded-full h-2">
+									<div 
+										className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+										style={{ width: `${(Object.keys(answers).length / questions.length) * 100}%` }}
+									></div>
+								</div>
+							</div>
+
+							{/* Question Grid */}
+							<div className="mb-4">
+								<div className="max-h-64 overflow-y-auto custom-scrollbar">
+									<div className="grid grid-cols-5 gap-2 p-1">
+										{questions.map((_, index) => (
+											<button
+												key={index}
+												onClick={() => setCurrent(index)}
+												disabled={!testStarted || submitted}
+												className={`w-full aspect-square rounded-lg transition-all duration-200 flex items-center justify-center text-xs font-medium ${
+													index === current
+														? 'bg-blue-600 text-white ring-2 ring-blue-400 scale-110'
+														: answers[questions[index].id] !== undefined
+															? 'bg-green-600 text-white'
+															: markedForReview[questions[index].id]
+																? 'bg-orange-500 text-white'
+																: 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+												} ${
+													!testStarted || submitted ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:scale-105'
+												}`}
+												title={`Question ${index + 1}${answers[questions[index].id] !== undefined ? ' - Answered' : ''}${markedForReview[questions[index].id] ? ' - Marked for Review' : ''}`}
+											>
+												{index + 1}
+											</button>
+										))}
+									</div>
+								</div>
+								{/* Scroll indicator */}
+								{questions.length > 25 && (
+									<div className="text-center mt-2">
+										<div className="flex items-center justify-center space-x-1 text-xs text-gray-500">
+											<div className="w-1 h-1 bg-gray-500 rounded-full animate-pulse"></div>
+											<div className="w-1 h-1 bg-gray-500 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+											<div className="w-1 h-1 bg-gray-500 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+										</div>
+									</div>
+								)}
+							</div>
+
+							{/* Legend */}
+							<div className="space-y-2 text-xs text-gray-400">
+								<div className="flex items-center space-x-2">
+									<div className="w-3 h-3 bg-blue-600 rounded"></div>
+									<span>Current</span>
+								</div>
+								<div className="flex items-center space-x-2">
+									<div className="w-3 h-3 bg-green-600 rounded"></div>
+									<span>Answered</span>
+								</div>
+								<div className="flex items-center space-x-2">
+									<div className="w-3 h-3 bg-orange-500 rounded"></div>
+									<span>Marked</span>
+								</div>
+								<div className="flex items-center space-x-2">
+									<div className="w-3 h-3 bg-gray-700 rounded"></div>
+									<span>Unanswered</span>
+								</div>
+							</div>
+
+							{/* Quick Stats */}
+							<div className="mt-4 pt-4 border-t border-gray-600/50">
+								<div className="grid grid-cols-2 gap-3 text-sm">
+									<div className="text-center">
+										<div className="text-white font-semibold">{Object.keys(answers).length}</div>
+										<div className="text-gray-400">Answered</div>
+									</div>
+									<div className="text-center">
+										<div className="text-white font-semibold">{questions.length - Object.keys(answers).length}</div>
+										<div className="text-gray-400">Remaining</div>
+									</div>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
-
-				{/* Question Card */}
-				<div className="bg-gray-800/90 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 mb-6 shadow-xl">
-					{/* Question Header */}
-					<div className="flex items-center justify-between mb-6">
-						<div className="flex items-center space-x-4">
-							<span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-								Question {current + 1} of {questions.length}
-							</span>
-							<span className="bg-gray-700 text-gray-300 px-3 py-1 rounded-full text-sm">
-								{q.topic}
-							</span>
-						</div>
-						<div className="flex items-center space-x-2">
-							<button
-								onClick={() => handleMarkForReview(q.id)}
-								className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-									markedForReview[q.id]
-										? 'bg-orange-500 text-white'
-										: 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-								}`}
-							>
-								{markedForReview[q.id] ? 'Marked' : 'Mark for Review'}
-							</button>
-						</div>
-					</div>
-
-					{/* Question Text */}
-					<div className="mb-8">
-						<p className="text-white text-lg leading-relaxed">{q.question_text}</p>
-					</div>
-
-					{/* Options */}
-					<div className="space-y-3 mb-8">
-						{q.options.map((option: string, index: number) => (
-							<button
-								key={index}
-								onClick={() => handleAnswerSelect(q.id, index)}
-								disabled={submitted}
-								className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 ${
-									answers[q.id] === index
-										? 'border-blue-500 bg-blue-500/20 text-white'
-										: 'border-gray-600 hover:border-gray-500 bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
-								} ${
-									submitted ? 'cursor-not-allowed' : 'cursor-pointer hover:scale-[1.02]'
-								}`}
-							>
-								<span className="font-medium">{String.fromCharCode(65 + index)}.</span> {option}
-							</button>
-						))}
-					</div>
-
-					{/* Navigation */}
-					<div className="flex items-center justify-between">
-						<button
-							onClick={() => setCurrent(Math.max(0, current - 1))}
-							disabled={current === 0}
-							className="px-6 py-3 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-500 text-white rounded-lg transition-colors flex items-center space-x-2"
-						>
-							<ArrowLeft className="w-4 h-4" />
-							<span>Previous</span>
-						</button>
-						
-						<div className="flex items-center space-x-3">
-							<button
-								onClick={handleSaveAndContinue}
-								className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2"
-							>
-								<span>Save & Continue</span>
-								<ChevronRight className="w-4 h-4" />
-							</button>
-						</div>
-					</div>
-				</div>
-
-				{/* Submit Button */}
-				{current === questions.length - 1 && (
-					<div className="text-center">
-						<button
-							onClick={handleSubmit}
-							className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-xl"
-						>
-							Submit Test
-						</button>
-					</div>
-				)}
 			</div>
 		</div>
 	);
